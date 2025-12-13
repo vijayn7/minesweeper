@@ -1,4 +1,5 @@
 #include "Board.h"
+#include "solverUtilities.cpp"
 #include <iostream>
 
 using namespace std;
@@ -136,8 +137,8 @@ void Board::spawnMines() {
     int minesToSpawn = totalMines;
 
     while (minesToSpawn > 0) {
-        int x = rand() % GRID_SIZE;
-        int y = rand() % GRID_SIZE;
+        int x = solverUtilities::getRandomInt(0, GRID_SIZE - 1);
+        int y = solverUtilities::getRandomInt(0, GRID_SIZE - 1);
 
         if (gridData[x][y] != BOMB) {
             gridData[x][y] = BOMB; 

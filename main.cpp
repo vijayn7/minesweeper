@@ -3,9 +3,14 @@
 #include "BoardRenderer.h"
 #include <iostream>
 #include <optional>
+#include <cstdlib>
+#include <ctime>
 #include "algoSolver.cpp"
 
 int main() {    
+    // Seed random number generator for different results each run
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    
     // Create the main window with initial size (board + mode indicator)
     sf::RenderWindow window(sf::VideoMode({450, 480}), "Minesweeper");
     
