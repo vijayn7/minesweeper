@@ -11,6 +11,9 @@ private:
     sf::Clock clickDelay;
     float preClickDelay = 0.2f; // Show selection before clicking
 
+    queue<std::pair<int, int>> cellsToReveal;
+    queue<std::pair<int, int>> cellsToFlag;
+
 public:
 
     algoSolver(IBoardSolver& b) : gameBoard(b) {}
@@ -20,6 +23,9 @@ public:
         if (moveClock.getElapsedTime().asSeconds() < moveDelay) {
             return;
         }
+
+        // check if game is over
+        if (gameBoard.isGameOver()) gameBoard.reset(); firstMove = true;
 
         makeFirstMove();
         

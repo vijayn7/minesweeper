@@ -41,6 +41,7 @@ public:
     GameState getGameState() const { return currentGameState; }
     ClickMode getClickMode() const { return currentClickMode; }
     void toggleClickMode();
+    bool isGameOver() const;
     
     // Cell queries
     int getCellVal(int x, int y) const override;
