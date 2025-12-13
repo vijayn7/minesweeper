@@ -54,6 +54,9 @@ public:
     // Utility
     std::vector<std::vector<int>> getPlayerView() const override;
     std::vector<std::pair<int, int>> getAllUnrevealedCells() const override;
+    std::vector<std::pair<int, int>> getAllFlaggedCells() const = 0 override;
+    std::vector<std::pair<int, int>> getUnrevealedNeighbors(int x, int y) const override;
+    std::vector<std::pair<int, int>> getOnes() const override;
     
 private:
     void spawnMines();

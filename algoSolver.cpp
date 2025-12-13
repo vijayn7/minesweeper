@@ -85,6 +85,11 @@ private:
         queueRevealCell(move);
     }
 
+    // if a cell has a 1 and only one unrevealed neighbor, flag that neighbor
+    void flagCornersOfOnes() {
+        
+    }
+
 public:
 
     algoSolver(IBoardSolver& b, BoardRenderer* r) : gameBoard(b), renderer(r) {}

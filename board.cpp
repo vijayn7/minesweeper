@@ -239,3 +239,44 @@ vector<pair<int, int>> Board::getAllUnrevealedCells() const {
 void Board::setClickMode(ClickMode mode) {
     currentClickMode = mode;
 }
+
+vector<pair<int, int>> Board::getAllFlaggedCells() const {
+    vector<pair<int, int>> flaggedCells;
+    for (int x = 0; x < GRID_SIZE; x++) {
+        for (int y = 0; y < GRID_SIZE; y++) {
+            if (flaggedGrid[x][y]) {
+                flaggedCells.emplace_back(x, y);
+            }
+        }
+    }
+    return flaggedCells;
+}
+
+vector<pair<int, int>> Board::getUnrevealedNeighbors(int x, int y) const {
+    vector<pair<int, int>> neighbors;
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            if (dx == 0 && dy == 0) continue;
+            int nx = x + dx;
+            int ny = y + dy;
+            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                if (!revealedGrid[nx][ny]) {
+                    neighbors.emplace_back(nx, ny);
+                }
+            }
+        }
+    }
+    return neighbors;
+}
+
+vector<pair<int, int>> Board::getOnes() const {
+    vector<pair<int, int>> ones;
+    for (int x = 0; x < GRID_SIZE; x++) {
+        for (int y = 0; y < GRID_SIZE; y++) {
+            if (gridData[x][y] == ONE) {
+                ones.emplace_back(x, y);
+            }
+        }
+    }
+    return ones;
+}

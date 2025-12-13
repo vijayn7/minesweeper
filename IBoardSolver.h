@@ -33,6 +33,10 @@ enum CellVal { ZERO = 0, ONE = 1, TWO = 2, THREE = 3, FOUR = 4, FIVE = 5, SIX = 
     
     // Utility
     virtual std::vector<std::pair<int, int>> getAllUnrevealedCells() const = 0;
+    virtual std::vector<std::pair<int, int>> getAllFlaggedCells() const = 0;
+    virtual std::vector<std::pair<int, int>> getUnrevealedNeighbors(int x, int y) const = 0;
+    virtual std::vector<std::pair<int, int>> getOnes() const = 0;
+
     virtual bool searchCell(int x, int y) const = 0;
     virtual bool isGameOver() const = 0;
     virtual void reset() = 0;
