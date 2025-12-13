@@ -10,6 +10,7 @@ private:
     static constexpr float CELL_SIZE = 50.0f;
     enum clickMode { REVEAL, FLAG }; 
     enum gameState { PLAYING, WON, LOST };
+    enum selectionType { SELECT, SEARCH, CLICK };
     clickMode currentClickMode = REVEAL;
     gameState currentGameState = PLAYING;
     vector<vector<int>> gridData;
@@ -150,7 +151,7 @@ public:
             currentClickMode = REVEAL;
     }
 
-    void drawCells(sf::RenderWindow& window) {
+    void drawCells() {
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
 
@@ -160,7 +161,7 @@ public:
                     sf::RectangleShape cell({CELL_SIZE, CELL_SIZE});
                     cell.setPosition({i * CELL_SIZE, j * CELL_SIZE});
                     cell.setFillColor(sf::Color(192, 192, 192));
-                    window.draw(cell);
+                    windowPtr->draw(cell);
                     
                     // Subtle border for grid definition
                     sf::RectangleShape border({CELL_SIZE, CELL_SIZE});
@@ -168,35 +169,35 @@ public:
                     border.setFillColor(sf::Color::Transparent);
                     border.setOutlineThickness(-1);
                     border.setOutlineColor(sf::Color(128, 128, 128));
-                    window.draw(border);
+                    windowPtr->draw(border);
                 } else {
                     // Draw covered cell with classic raised 3D look
                     sf::RectangleShape cell({CELL_SIZE, CELL_SIZE});
                     cell.setPosition({i * CELL_SIZE, j * CELL_SIZE});
                     cell.setFillColor(sf::Color(189, 189, 189));
-                    window.draw(cell);
+                    windowPtr->draw(cell);
                     
                     // Light top-left border (raised effect)
                     sf::RectangleShape topBorder({CELL_SIZE, 3});
                     topBorder.setPosition({i * CELL_SIZE, j * CELL_SIZE});
                     topBorder.setFillColor(sf::Color(255, 255, 255));
-                    window.draw(topBorder);
+                    windowPtr->draw(topBorder);
                     
                     sf::RectangleShape leftBorder({3, CELL_SIZE});
                     leftBorder.setPosition({i * CELL_SIZE, j * CELL_SIZE});
                     leftBorder.setFillColor(sf::Color(255, 255, 255));
-                    window.draw(leftBorder);
+                    windowPtr->draw(leftBorder);
                     
                     // Dark bottom-right border (shadow)
                     sf::RectangleShape bottomBorder({CELL_SIZE, 3});
                     bottomBorder.setPosition({i * CELL_SIZE, j * CELL_SIZE + CELL_SIZE - 3});
                     bottomBorder.setFillColor(sf::Color(128, 128, 128));
-                    window.draw(bottomBorder);
+                    windowPtr->draw(bottomBorder);
                     
                     sf::RectangleShape rightBorder({3, CELL_SIZE});
                     rightBorder.setPosition({i * CELL_SIZE + CELL_SIZE - 3, j * CELL_SIZE});
                     rightBorder.setFillColor(sf::Color(128, 128, 128));
-                    window.draw(rightBorder);
+                    windowPtr->draw(rightBorder);
                     
                     // Draw flag if cell is flagged
                     if (flaggedGrid[i][j]) {
@@ -207,13 +208,13 @@ public:
                         sf::RectangleShape pole({2, 18});
                         pole.setPosition({centerX - 1, centerY - 12});
                         pole.setFillColor(sf::Color(60, 60, 60));
-                        window.draw(pole);
+                        windowPtr->draw(pole);
                         
                         // Flag base
                         sf::RectangleShape base({8, 2});
                         base.setPosition({centerX - 4, centerY + 6});
                         base.setFillColor(sf::Color(60, 60, 60));
-                        window.draw(base);
+                        windowPtr->draw(base);
                         
                         // Flag fabric (cleaner triangle)
                         sf::ConvexShape flag(3);
@@ -221,7 +222,7 @@ public:
                         flag.setPoint(1, {centerX + 11, centerY - 6});
                         flag.setPoint(2, {centerX + 1, centerY});
                         flag.setFillColor(sf::Color(220, 20, 20));
-                        window.draw(flag);
+                        windowPtr->draw(flag);
                     }
                 }
                 
@@ -236,7 +237,7 @@ public:
                     sf::CircleShape bombBody(10);
                     bombBody.setPosition({centerX - 10, centerY - 10});
                     bombBody.setFillColor(sf::Color(30, 30, 30));
-                    window.draw(bombBody);
+                    windowPtr->draw(bombBody);
                     
                     // Bomb spikes (8 directions, cleaner)
                     for (int angle = 0; angle < 360; angle += 45) {
@@ -245,14 +246,14 @@ public:
                         spike.setPosition({centerX, centerY});
                         spike.setRotation(sf::degrees(angle));
                         spike.setFillColor(sf::Color(30, 30, 30));
-                        window.draw(spike);
+                        windowPtr->draw(spike);
                     }
                     
                     // Small highlight for depth
                     sf::CircleShape highlight(3);
                     highlight.setPosition({centerX - 5, centerY - 6});
                     highlight.setFillColor(sf::Color(80, 80, 80));
-                    window.draw(highlight);
+                    windowPtr->draw(highlight);
                     
                     } else if (gridData[i][j] != 0) {
                         // Draw number with standardized minesweeper colors
@@ -279,7 +280,7 @@ public:
                                              bounds.size.y / 2 + bounds.position.y});
                         numberText.setPosition({i * CELL_SIZE + CELL_SIZE / 2, 
                                                j * CELL_SIZE + CELL_SIZE / 2});
-                        window.draw(numberText);
+                        windowPtr->draw(numberText);
                     }
                 }
 
@@ -325,20 +326,8 @@ public:
             return false;
         return gridData[x][y] == BOMB;
     }
-
-    void drawSelectionBox(sf::RenderWindow& window) {
-        if (selectedX >= 0 && selectedY >= 0) {
-            // Subtle selection highlight
-            sf::RectangleShape selectionBox({CELL_SIZE, CELL_SIZE});
-            selectionBox.setPosition({selectedX * CELL_SIZE, selectedY * CELL_SIZE});
-            selectionBox.setFillColor(sf::Color(255, 255, 255, 20));
-            selectionBox.setOutlineThickness(-2);
-            selectionBox.setOutlineColor(sf::Color(80, 80, 80, 180));
-            window.draw(selectionBox);
-        }
-    }
     
-    void drawModeIndicator(sf::RenderWindow& window) {
+    void drawModeIndicator() {
         // Mode indicator panel at bottom
         float indicatorHeight = 30;
         float indicatorY = getHeight();
@@ -346,7 +335,7 @@ public:
         sf::RectangleShape indicatorBg({getWidth(), indicatorHeight});
         indicatorBg.setPosition({0, indicatorY});
         indicatorBg.setFillColor(sf::Color(220, 220, 220));
-        window.draw(indicatorBg);
+        windowPtr->draw(indicatorBg);
         
         // Mode text
         static sf::Font font("font.ttf");
@@ -367,17 +356,17 @@ public:
         modeText.setOrigin({textBounds.size.x / 2 + textBounds.position.x, 
                            textBounds.size.y / 2 + textBounds.position.y});
         modeText.setPosition({getWidth() / 2, indicatorY + indicatorHeight / 2});
-        window.draw(modeText);
+        windowPtr->draw(modeText);
     }
     
-    void drawGameOverScreen(sf::RenderWindow& window) {
+    void drawGameOverScreen() {
         if (currentGameState == PLAYING) return;
         
         // Semi-transparent overlay
         sf::RectangleShape overlay({getWidth(), getHeight()});
         overlay.setPosition({0, 0});
         overlay.setFillColor(sf::Color(0, 0, 0, 180));
-        window.draw(overlay);
+        windowPtr->draw(overlay);
         
         // Game over panel
         float panelWidth = 300;
@@ -390,7 +379,7 @@ public:
         panel.setFillColor(sf::Color(240, 240, 240));
         panel.setOutlineThickness(3);
         panel.setOutlineColor(sf::Color(100, 100, 100));
-        window.draw(panel);
+        windowPtr->draw(panel);
         
         // Title text
         static sf::Font font("font.ttf");
@@ -411,7 +400,7 @@ public:
         titleText.setOrigin({titleBounds.size.x / 2 + titleBounds.position.x, 
                             titleBounds.size.y / 2 + titleBounds.position.y});
         titleText.setPosition({getWidth() / 2, panelY + 50});
-        window.draw(titleText);
+        windowPtr->draw(titleText);
         
         // Instructions text
         sf::Text instructionText(font, "Press R to restart", 20);
@@ -421,7 +410,7 @@ public:
         instructionText.setOrigin({instrBounds.size.x / 2 + instrBounds.position.x, 
                                    instrBounds.size.y / 2 + instrBounds.position.y});
         instructionText.setPosition({getWidth() / 2, panelY + 105});
-        window.draw(instructionText);
+        windowPtr->draw(instructionText);
     }
 
     void handleEvent(const std::optional<sf::Event>& event) {
@@ -475,10 +464,10 @@ public:
         if (!windowPtr) return;
         
         windowPtr->clear(sf::Color::White);
-        drawCells(*windowPtr);
-        drawSelectionBox(*windowPtr);
-        drawModeIndicator(*windowPtr);
-        drawGameOverScreen(*windowPtr);
+        drawCells();
+        drawSelectionBox(selectionType::SELECT);
+        drawModeIndicator();
+        drawGameOverScreen();
         windowPtr->display();
     }
 
@@ -493,4 +482,63 @@ public:
         currentClickMode = REVEAL;
         currentGameState = PLAYING;
     }
+
+    vector<vector<int>> getPlayerView() const {
+        vector<vector<int>> playerView(GRID_SIZE, vector<int>(GRID_SIZE, -1)); // -1 for unrevealed
+
+        for (int x = 0; x < GRID_SIZE; x++) {
+            for (int y = 0; y < GRID_SIZE; y++) {
+                if (revealedGrid[x][y]) {
+                    playerView[x][y] = gridData[x][y];
+                } else if (flaggedGrid[x][y]) {
+                    playerView[x][y] = -2; // -2 for flagged
+                }
+            }
+        }
+
+        return playerView;
+    }
+
+    bool setSelectedCell(int x, int y) {
+        if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+            selectedX = x;
+            selectedY = y;
+            return true;
+        }
+        return false;
+    }
+
+    bool searchCell(int x, int y) const {
+        if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return false;
+        return revealedGrid[x][y];
+    }
+
+    void drawSelectionBox(selectionType type) {
+
+        sf::Color boxColor;
+
+        switch (type)
+        {
+            case SELECT:
+                boxColor = sf::Color(255, 255, 255, 20); // Subtle white highlight
+                break;
+            case SEARCH:
+                boxColor = sf::Color(0, 255, 0, 50); // Subtle green highlight
+                break;
+            case CLICK:
+                boxColor = sf::Color(255, 0, 0, 50); // Subtle red highlight
+                break;
+        }
+
+        if (selectedX >= 0 && selectedY >= 0) {
+            // Subtle selection highlight
+            sf::RectangleShape selectionBox({CELL_SIZE, CELL_SIZE});
+            selectionBox.setPosition({selectedX * CELL_SIZE, selectedY * CELL_SIZE});
+            selectionBox.setFillColor(boxColor);
+            selectionBox.setOutlineThickness(-2);
+            selectionBox.setOutlineColor(sf::Color(80, 80, 80, 180));
+            windowPtr->draw(selectionBox);
+        }
+    }
+
 };
