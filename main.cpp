@@ -3,8 +3,8 @@
 #include <optional>
 
 int main() {    
-    // Create the main window with initial size
-    sf::RenderWindow window(sf::VideoMode({450, 450}), "Minesweeper");
+    // Create the main window with initial size (board + mode indicator)
+    sf::RenderWindow window(sf::VideoMode({450, 480}), "Minesweeper");
     
     Board board(window);
 

@@ -338,6 +338,38 @@ public:
         }
     }
     
+    void drawModeIndicator(sf::RenderWindow& window) {
+        // Mode indicator panel at bottom
+        float indicatorHeight = 30;
+        float indicatorY = getHeight();
+        
+        sf::RectangleShape indicatorBg({getWidth(), indicatorHeight});
+        indicatorBg.setPosition({0, indicatorY});
+        indicatorBg.setFillColor(sf::Color(220, 220, 220));
+        window.draw(indicatorBg);
+        
+        // Mode text
+        static sf::Font font("font.ttf");
+        sf::Text modeText(font);
+        
+        if (currentClickMode == REVEAL) {
+            modeText.setString("MODE: REVEAL (Space to toggle)");
+            modeText.setFillColor(sf::Color(0, 100, 200));
+        } else {
+            modeText.setString("MODE: FLAG (Space to toggle)");
+            modeText.setFillColor(sf::Color(200, 20, 20));
+        }
+        
+        modeText.setCharacterSize(18);
+        modeText.setStyle(sf::Text::Bold);
+        
+        sf::FloatRect textBounds = modeText.getLocalBounds();
+        modeText.setOrigin({textBounds.size.x / 2 + textBounds.position.x, 
+                           textBounds.size.y / 2 + textBounds.position.y});
+        modeText.setPosition({getWidth() / 2, indicatorY + indicatorHeight / 2});
+        window.draw(modeText);
+    }
+    
     void drawGameOverScreen(sf::RenderWindow& window) {
         if (currentGameState == PLAYING) return;
         
@@ -445,6 +477,7 @@ public:
         windowPtr->clear(sf::Color::White);
         drawCells(*windowPtr);
         drawSelectionBox(*windowPtr);
+        drawModeIndicator(*windowPtr);
         drawGameOverScreen(*windowPtr);
         windowPtr->display();
     }
