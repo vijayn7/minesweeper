@@ -52,6 +52,18 @@ int main() {
                 if (keyEvent && keyEvent->code == sf::Keyboard::Key::R) {
                     board.reset();
                 }
+                
+                if (keyEvent && keyEvent->code == sf::Keyboard::Key::F) {
+                    renderer.setDebugOverlay(true);
+                }
+            }
+            
+            if (event->is<sf::Event::KeyReleased>()) {
+                const auto& keyEvent = event->getIf<sf::Event::KeyReleased>();
+                
+                if (keyEvent && keyEvent->code == sf::Keyboard::Key::F) {
+                    renderer.setDebugOverlay(false);
+                }
             }
 
             if (event->is<sf::Event::MouseButtonPressed>()) {

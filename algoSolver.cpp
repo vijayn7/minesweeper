@@ -1,6 +1,9 @@
+#include "IBoardSolver.h"
+#include "Board.h"
+
 class algoSolver {
 private:
-    Board& gameBoard;
+    IBoardSolver& gameBoard;
     bool firstMove = true;
     sf::Clock moveClock;
     float moveDelay = 0.5f; // Delay between moves in seconds
@@ -10,7 +13,7 @@ private:
 
 public:
 
-    algoSolver(Board& b) : gameBoard(b) {}
+    algoSolver(IBoardSolver& b) : gameBoard(b) {}
 
     void makeMove() {
         // Only make a move if enough time has passed
@@ -42,7 +45,7 @@ public:
                 gameBoard.algoClick();
                 waitingToClick = false;
                 
-                if (gameBoard.getCellVal(gameBoard.getSelectedX(), gameBoard.getSelectedY()) == 0) {
+                if (gameBoard.getCellVal(gameBoard.getSelectedX(), gameBoard.getSelectedY()) == Board::ZERO) {
                     firstMove = false;
                 }
             }

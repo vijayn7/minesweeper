@@ -15,6 +15,7 @@ private:
     sf::Clock clickAnimationClock;
     bool showClickAnimation = false;
     float clickAnimationDuration = 0.3f;
+    bool debugOverlayEnabled = false;
     
 public:
     BoardRenderer(Board& board, sf::RenderWindow& window);
@@ -31,6 +32,9 @@ public:
     // Animation control
     void startClickAnimation();
     
+    // Debug features
+    void setDebugOverlay(bool enabled) { debugOverlayEnabled = enabled; }
+    
     // Utility
     float getCellSize() const { return CELL_SIZE; }
     
@@ -40,6 +44,7 @@ private:
     void drawFlag(float centerX, float centerY);
     void drawBomb(float centerX, float centerY);
     void drawNumber(int x, int y, int value);
+    void drawDebugOverlay(int x, int y);
 };
 
 #endif

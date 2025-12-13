@@ -32,6 +32,11 @@ void BoardRenderer::drawCells() {
             } else {
                 drawCoveredCell(i, j);
             }
+            
+            // Debug overlay - show all values when enabled
+            if (debugOverlayEnabled) {
+                drawDebugOverlay(i, j);
+            }
         }
     }
 }
@@ -53,11 +58,11 @@ void BoardRenderer::drawRevealedCell(int x, int y) {
     
     // Draw cell content
     int cellVal = board->getCellVal(x, y);
-    if (cellVal == 9) { // BOMB
+    if (cellVal == Board::BOMB) { // BOMB
         float centerX = x * CELL_SIZE + CELL_SIZE / 2;
         float centerY = y * CELL_SIZE + CELL_SIZE / 2;
         drawBomb(centerX, centerY);
-    } else if (cellVal != 0) {
+    } else if (cellVal != Board::ZERO) {
         drawNumber(x, y, cellVal);
     }
 }
@@ -295,4 +300,36 @@ void BoardRenderer::drawSelectionBox(SelectionType type) {
 void BoardRenderer::startClickAnimation() {
     showClickAnimation = true;
     clickAnimationClock.restart();
+}
+
+void BoardRenderer::drawDebugOverlay(int x, int y) {
+    int cellVal = board->getCellVal(x, y);
+    
+    // Semi-transparent background for better visibility
+    sf::RectangleShape overlayBg({CELL_SIZE * 0.6f, CELL_SIZE * 0.6f});
+    overlayBg.setPosition({x * CELL_SIZE + CELL_SIZE * 0.2f, y * CELL_SIZE + CELL_SIZE * 0.2f});
+    overlayBg.setFillColor(sf::Color(0, 0, 0, 150));
+    window->draw(overlayBg);
+    
+    // Draw cell value
+    static sf::Font font("font.ttf");
+    sf::Text debugText(font);
+    
+    if (cellVal == Board::BOMB) { // BOMB
+        debugText.setString("B");
+        debugText.setFillColor(sf::Color(255, 255, 0)); // Yellow for bombs
+    } else {
+        debugText.setString(std::to_string(cellVal));
+        debugText.setFillColor(sf::Color(255, 255, 255)); // White for numbers
+    }
+    
+    debugText.setCharacterSize(24);
+    debugText.setStyle(sf::Text::Bold);
+    
+    sf::FloatRect bounds = debugText.getLocalBounds();
+    debugText.setOrigin({bounds.size.x / 2 + bounds.position.x, 
+                         bounds.size.y / 2 + bounds.position.y});
+    debugText.setPosition({x * CELL_SIZE + CELL_SIZE / 2, 
+                           y * CELL_SIZE + CELL_SIZE / 2});
+    window->draw(debugText);
 }

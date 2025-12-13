@@ -3,7 +3,7 @@
 
 using namespace std;
 
-Board::Board() : gridData(GRID_SIZE, vector<int>(GRID_SIZE, 0)), 
+Board::Board() : gridData(GRID_SIZE, vector<CellVal>(GRID_SIZE, ZERO)), 
                  revealedGrid(GRID_SIZE, vector<bool>(GRID_SIZE, false)),
                  flaggedGrid(GRID_SIZE, vector<bool>(GRID_SIZE, false)) {
     spawnMines();
@@ -27,7 +27,7 @@ void Board::moveDown() {
 }
 
 int Board::getCellVal(int x, int y) const {
-    return gridData[x][y];
+    return static_cast<int>(gridData[x][y]);
 }
 
 bool Board::isRevealed(int x, int y) const {
@@ -46,7 +46,7 @@ void Board::revealCell(int x, int y) {
     if (currentGameState != PLAYING) return; // Game is over
     
     revealedGrid[x][y] = true;
-    cout << "Revealed cell (" << x << ", " << y << ") with value: " << gridData[x][y] << endl;
+    cout << "Revealed cell (" << x << ", " << y << ") with value: " << static_cast<int>(gridData[x][y]) << endl;
     
     // If hit a bomb, game over
     if (gridData[x][y] == BOMB) {
@@ -56,7 +56,7 @@ void Board::revealCell(int x, int y) {
     }
     
     // Flood fill for empty cells (value 0)
-    if (gridData[x][y] == 0) {
+    if (gridData[x][y] == ZERO) {
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 if (dx == 0 && dy == 0) continue;
@@ -109,7 +109,7 @@ void Board::handleClick(int x, int y) {
     
     cout << "Clicked on cell: (" << x << ", " << y << ")\n Click mode: " 
          << (currentClickMode == REVEAL ? "REVEAL" : "FLAG") << " Cell value: " 
-         << gridData[x][y] << endl;
+         << static_cast<int>(gridData[x][y]) << endl;
     
     if (currentClickMode == REVEAL) {
         // Can't reveal a flagged cell
@@ -160,7 +160,7 @@ void Board::solveForCellValues() {
                     }
                 }
             }
-            gridData[x][y] = mineCount;
+            gridData[x][y] = static_cast<CellVal>(mineCount);
         }   
     }
 }
@@ -172,7 +172,7 @@ bool Board::isMine(int x, int y) {
 }
 
 void Board::reset() {
-    gridData = vector<vector<int>>(GRID_SIZE, vector<int>(GRID_SIZE, 0));
+    gridData = vector<vector<CellVal>>(GRID_SIZE, vector<CellVal>(GRID_SIZE, ZERO));
     revealedGrid = vector<vector<bool>>(GRID_SIZE, vector<bool>(GRID_SIZE, false));
     flaggedGrid = vector<vector<bool>>(GRID_SIZE, vector<bool>(GRID_SIZE, false));
     spawnMines();
@@ -189,7 +189,7 @@ vector<vector<int>> Board::getPlayerView() const {
     for (int x = 0; x < GRID_SIZE; x++) {
         for (int y = 0; y < GRID_SIZE; y++) {
             if (revealedGrid[x][y]) {
-                playerView[x][y] = gridData[x][y];
+                playerView[x][y] = static_cast<int>(gridData[x][y]);
             } else if (flaggedGrid[x][y]) {
                 playerView[x][y] = -2; // -2 for flagged
             }
