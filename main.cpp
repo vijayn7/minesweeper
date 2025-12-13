@@ -45,6 +45,7 @@ int main() {
 
         // Draw the board
         board.drawCells(window);
+        board.drawSelectionBox(window);
 
         // Update the window
         window.display();

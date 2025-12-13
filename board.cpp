@@ -10,13 +10,14 @@ private:
     static constexpr float CELL_SIZE = 50.0f;
     enum clickMode { REVEAL, FLAG }; 
     clickMode currentClickMode = REVEAL;
-    
-    vector<vector<int>> grid() {
-        return vector<vector<int>>(GRID_SIZE, vector<int>(GRID_SIZE, 0));
-    }
+    vector<vector<int>> gridData;
+    int selectedX = -1;
+    int selectedY = -1;
 
 public:
-    Board() {}
+    Board() : gridData(GRID_SIZE, vector<int>(GRID_SIZE, 0)) {
+        spawnMines();
+    }
 
     int getGridSize() const { return GRID_SIZE; }
     float getCellSize() const { return CELL_SIZE; }
@@ -24,9 +25,11 @@ public:
     float getHeight() const { return GRID_SIZE * CELL_SIZE; }
 
     void handleClick(int x, int y) {
+        selectedX = x;
+        selectedY = y;
         cout << "Clicked on cell: (" << x << ", " << y << ")\n Click mode: " 
-             << (currentClickMode == REVEAL ? "REVEAL" : "FLAG") << "Cell value: " 
-             << grid()[x][y] << endl;
+             << (currentClickMode == REVEAL ? "REVEAL" : "FLAG") << " Cell value: " 
+             << gridData[x][y] << endl;
     }
 
     void toggleClickMode() {
@@ -49,13 +52,41 @@ public:
                 window.draw(cell);
                 
                 //Draw number
-                static sf::Font font("font.ttf");
-                sf::Text numberText(font, std::to_string(grid()[i][j]), 24);
-                numberText.setFillColor(sf::Color::Black);
-                numberText.setPosition({i * CELL_SIZE + CELL_SIZE / 4, j * CELL_SIZE + CELL_SIZE / 8});
-                window.draw(numberText);
+                if (gridData[i][j] != 0) {
+                    static sf::Font font("font.ttf");
+                    sf::Text numberText(font, std::to_string(gridData[i][j]), 24);
+                    numberText.setFillColor(sf::Color::Black);
+                    numberText.setPosition({i * CELL_SIZE + CELL_SIZE / 4, j * CELL_SIZE + CELL_SIZE / 8});
+                    window.draw(numberText);
+                }
 
             }
         }
     }
+
+    void spawnMines() {
+        int minesToSpawn = 10;
+
+        while (minesToSpawn > 0) {
+            int x = rand() % GRID_SIZE;
+            int y = rand() % GRID_SIZE;
+
+            if (gridData[x][y] != -1) {
+                gridData[x][y] = -1; 
+                minesToSpawn--;
+            }
+        }
+    }
+
+    void drawSelectionBox(sf::RenderWindow& window) {
+        if (selectedX >= 0 && selectedY >= 0) {
+            sf::RectangleShape selectionBox({CELL_SIZE, CELL_SIZE});
+            selectionBox.setPosition({selectedX * CELL_SIZE, selectedY * CELL_SIZE});
+            selectionBox.setFillColor(sf::Color(0, 0, 0, 0));
+            selectionBox.setOutlineThickness(3);
+            selectionBox.setOutlineColor(sf::Color::Red);
+            window.draw(selectionBox);
+        }
+    }
+
 };
