@@ -14,8 +14,10 @@ private:
     int selectedX = 0;
     int selectedY = 0;
 
+    sf::RenderWindow* windowPtr = nullptr;
+
 public:
-    Board() : gridData(GRID_SIZE, vector<int>(GRID_SIZE, 0)) {
+    Board(sf::RenderWindow& window) : gridData(GRID_SIZE, vector<int>(GRID_SIZE, 0)), windowPtr(&window) {
         spawnMines();
     }
 
@@ -108,4 +110,55 @@ public:
         }
     }
 
+    void handleEvent(const std::optional<sf::Event>& event) {
+        if (!event || !windowPtr) return;
+
+        if (event->is<sf::Event::Closed>())
+            windowPtr->close();
+
+        if (event->is<sf::Event::KeyPressed>()) {
+            const auto& keyEvent = event->getIf<sf::Event::KeyPressed>();
+
+            if (keyEvent && keyEvent->code == sf::Keyboard::Key::Escape)
+                windowPtr->close();
+
+            if (keyEvent && keyEvent->code == sf::Keyboard::Key::Space)
+                toggleClickMode();
+
+            if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Left || keyEvent->code == sf::Keyboard::Key::A))
+                moveLeft();
+
+            if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Right || keyEvent->code == sf::Keyboard::Key::D))
+                moveRight();
+
+            if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::W))
+                moveUp();
+
+            if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S))
+                moveDown();
+
+            if (keyEvent && keyEvent->code == sf::Keyboard::Key::Enter) {
+                handleClick(selectedX, selectedY);
+            }
+        }
+
+        if (event->is<sf::Event::MouseButtonPressed>()) {
+            const auto& mouseEvent = event->getIf<sf::Event::MouseButtonPressed>();
+            if (mouseEvent) {
+                int x = mouseEvent->position.x / static_cast<int>(CELL_SIZE);
+                int y = mouseEvent->position.y / static_cast<int>(CELL_SIZE);
+                
+                handleClick(x, y);
+            }
+        }
+    }
+
+    void render() {
+        if (!windowPtr) return;
+        
+        windowPtr->clear(sf::Color::White);
+        drawCells(*windowPtr);
+        drawSelectionBox(*windowPtr);
+        windowPtr->display();
+    }
 };
