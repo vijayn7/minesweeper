@@ -15,16 +15,26 @@ private:
     BoardRenderer* renderer;
     bool firstMove = true;
     sf::Clock moveClock;
-    float moveDelay = 0.5f; // Delay between moves in seconds
+    float speed = 1.0f; // Speed multiplier (1.0 = normal, 2.0 = 2x faster, 0.5 = 2x slower)
+    float baseMoveDelay = 0.5f; // Base delay between moves
     bool waitingToClick = false;
     sf::Clock clickDelay;
     float preClickDelay = 0.2f; // Show selection before clicking
+    
+    float getMoveDelay() const {
+        return baseMoveDelay / speed;
+    }
 
     queue<std::pair<int, int>> cellsToReveal;
     queue<std::pair<int, int>> cellsToFlag;
     set<std::pair<int, int>> queuedForFlagging; // Track cells already queued for flagging
     bool algoActive = true; // Controls whether the algorithm should continue making moves
     bool inRandomGuessPhase = true; // Track if we're still in random guessing phase
+    
+    // Statistics tracking
+    int wins = 0;
+    int losses = 0;
+    bool gameWasCounted = false; // Prevent counting the same game multiple times
 
     void queueRevealCell(pair<int, int> cell) {
         // Don't queue if already revealed
@@ -212,6 +222,18 @@ private:
     }
 
     void resetSolverState() {
+        // Track game result before resetting
+        if (!gameWasCounted && gameBoard.isGameOver()) {
+            if (gameBoard.getGameState() == IBoardSolver::WON) {
+                wins++;
+                cout << "Game Won! Total: " << wins << " wins, " << losses << " losses" << endl;
+            } else if (gameBoard.getGameState() == IBoardSolver::LOST) {
+                losses++;
+                cout << "Game Lost! Total: " << wins << " wins, " << losses << " losses" << endl;
+            }
+            gameWasCounted = true;
+        }
+        
         while (!cellsToReveal.empty()) cellsToReveal.pop();
         while (!cellsToFlag.empty()) cellsToFlag.pop();
         queuedForFlagging.clear();
@@ -220,6 +242,7 @@ private:
         firstMove = true;
         algoActive = true;
         inRandomGuessPhase = true;
+        gameWasCounted = false; // Reset for next game
     }
 
     // Cell - flagged neighbors == 1 && unrev neighbors - flagged neighbors == 1
@@ -281,10 +304,25 @@ private:
 public:
 
     algoSolver(IBoardSolver& b, BoardRenderer* r) : gameBoard(b), renderer(r) {}
+    
+    void setSpeed(float newSpeed) {
+        speed = std::max(0.1f, std::min(10.0f, newSpeed)); // Clamp between 0.1x and 10x
+        if (renderer) {
+            renderer->setAnimationSpeed(speed);
+        }
+    }
+    
+    float getSpeed() const {
+        return speed;
+    }
+    
+    int getWins() const { return wins; }
+    int getLosses() const { return losses; }
+    int getTotalGames() const { return wins + losses; }
 
     void makeMove() {
         // Only make a move if enough time has passed
-        if (moveClock.getElapsedTime().asSeconds() < moveDelay) {
+        if (moveClock.getElapsedTime().asSeconds() < getMoveDelay()) {
             return;
         }
 

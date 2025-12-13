@@ -13,7 +13,7 @@ void BoardRenderer::render() {
     drawCells();
     
     // Check if click animation should still be shown
-    if (showClickAnimation && clickAnimationClock.getElapsedTime().asSeconds() > clickAnimationDuration) {
+    if (showClickAnimation && clickAnimationClock.getElapsedTime().asSeconds() > (baseClickAnimationDuration / animationSpeed)) {
         showClickAnimation = false;
     }
     
@@ -26,6 +26,9 @@ void BoardRenderer::render() {
     }
     
     drawModeIndicator();
+}
+
+void BoardRenderer::finishFrame() {
     drawGameOverScreen();
     window->display();
 }
@@ -300,7 +303,8 @@ void BoardRenderer::drawSelectionBox(SelectionType type) {
     
     if (isAnimatingSelection) {
         float elapsedTime = selectionAnimationClock.getElapsedTime().asSeconds();
-        float progress = std::min(elapsedTime / selectionAnimationDuration, 1.0f);
+        float adjustedDuration = baseSelectionAnimationDuration / animationSpeed;
+        float progress = std::min(elapsedTime / adjustedDuration, 1.0f);
         
         // Ease-out cubic function for smooth deceleration
         float easedProgress = 1.0f - std::pow(1.0f - progress, 3.0f);
@@ -338,6 +342,72 @@ void BoardRenderer::startSelectionAnimation(int oldX, int oldY) {
     selectionAnimationClock.restart();
 }
 
+void BoardRenderer::drawStatsAndControls(int wins, int losses, float speed) {
+    float boardWidth = board->getGridSize() * CELL_SIZE;
+    float boardHeight = board->getGridSize() * CELL_SIZE;
+    int totalGames = wins + losses;
+    
+    // Stats panel on the right side, outside the board
+    float statsWidth = 200;
+    float statsHeight = 120;
+    float statsX = boardWidth + 10; // 10px padding from board edge
+    float statsY = 10;
+    
+    // Semi-transparent background
+    sf::RectangleShape statsBg({statsWidth, statsHeight});
+    statsBg.setPosition({statsX, statsY});
+    statsBg.setFillColor(sf::Color(240, 240, 240, 230));
+    statsBg.setOutlineThickness(2);
+    statsBg.setOutlineColor(sf::Color(100, 100, 100));
+    window->draw(statsBg);
+    
+    static sf::Font font("font.ttf");
+    
+    // Win/Loss stats
+    sf::Text statsText(font);
+    statsText.setCharacterSize(16);
+    statsText.setFillColor(sf::Color(30, 30, 30));
+    
+    std::string statsStr = "Wins: " + std::to_string(wins) + "\n";
+    statsStr += "Losses: " + std::to_string(losses) + "\n";
+    statsStr += "Total: " + std::to_string(totalGames) + "\n";
+    
+    if (totalGames > 0) {
+        float winRate = (static_cast<float>(wins) / totalGames) * 100.0f;
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer), "Win Rate: %.1f%%", winRate);
+        statsStr += std::string(buffer) + "\n";
+    }
+    
+    char speedBuffer[32];
+    snprintf(speedBuffer, sizeof(speedBuffer), "Speed: %.1fx", speed);
+    statsStr += std::string(speedBuffer);
+    
+    statsText.setString(statsStr);
+    statsText.setPosition({statsX + 10, statsY + 10});
+    window->draw(statsText);
+    
+    // Controls panel on the right side, below stats
+    float controlsWidth = 200;
+    float controlsHeight = 130;
+    float controlsX = boardWidth + 10; // 10px padding from board edge
+    float controlsY = statsY + statsHeight + 10; // 10px below stats panel
+    
+    sf::RectangleShape controlsBg({controlsWidth, controlsHeight});
+    controlsBg.setPosition({controlsX, controlsY});
+    controlsBg.setFillColor(sf::Color(240, 240, 240, 230));
+    controlsBg.setOutlineThickness(2);
+    controlsBg.setOutlineColor(sf::Color(100, 100, 100));
+    window->draw(controlsBg);
+    
+    sf::Text controlsText(font);
+    controlsText.setCharacterSize(14);
+    controlsText.setFillColor(sf::Color(30, 30, 30));
+    controlsText.setString("Controls:\nR - Reset\nSpace - Toggle Mode\n+ - Speed Up\n- - Slow Down\nF - Debug (hold)");
+    controlsText.setPosition({controlsX + 10, controlsY + 10});
+    window->draw(controlsText);
+}
+
 void BoardRenderer::startInspection(int x, int y) {
     inspectX = x;
     inspectY = y;
@@ -354,9 +424,9 @@ void BoardRenderer::stopInspection() {
 void BoardRenderer::drawInspectionBox() {
     if (inspectX < 0 || inspectY < 0) return;
     
-    // Pulsing animation
+    // Pulsing animation (speed affects pulse rate)
     float elapsed = inspectionAnimationClock.getElapsedTime().asSeconds();
-    float pulse = 0.5f + 0.5f * std::sin(elapsed * 8.0f); // Oscillate between 0.5 and 1.0
+    float pulse = 0.5f + 0.5f * std::sin(elapsed * 8.0f * animationSpeed); // Oscillate between 0.5 and 1.0
     
     // Blue outline with pulsing opacity
     sf::RectangleShape inspectionBox({CELL_SIZE, CELL_SIZE});

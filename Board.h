@@ -33,7 +33,7 @@ public:
     bool setSelectedCell(int x, int y) override;
     
     // Game state
-    GameState getGameState() const { return currentGameState; }
+    GameState getGameState() const override { return currentGameState; }
     ClickMode getClickMode() const { return currentClickMode; }
     void toggleClickMode();
     bool isGameOver() const override;

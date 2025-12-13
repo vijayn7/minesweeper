@@ -14,13 +14,14 @@ private:
     sf::RenderWindow* window;
     sf::Clock clickAnimationClock;
     bool showClickAnimation = false;
-    float clickAnimationDuration = 0.3f;
+    float baseClickAnimationDuration = 0.3f;
     bool debugOverlayEnabled = false;
+    float animationSpeed = 1.0f; // Speed multiplier for all animations
     
     // Selection animation
     bool isAnimatingSelection = false;
     sf::Clock selectionAnimationClock;
-    float selectionAnimationDuration = 0.15f;
+    float baseSelectionAnimationDuration = 0.15f;
     int prevSelectedX = 0;
     int prevSelectedY = 0;
     
@@ -35,12 +36,14 @@ public:
     
     // Main render function
     void render();
+    void finishFrame(); // Call after render() to complete the frame
     
     // Individual render components
     void drawCells();
     void drawModeIndicator();
     void drawGameOverScreen();
     void drawSelectionBox(SelectionType type);
+    void drawStatsAndControls(int wins, int losses, float speed);
     
     // Animation control
     void startClickAnimation();
@@ -50,6 +53,9 @@ public:
     
     // Debug features
     void setDebugOverlay(bool enabled) { debugOverlayEnabled = enabled; }
+    
+    // Speed control
+    void setAnimationSpeed(float speed) { animationSpeed = speed; }
     
     // Utility
     float getCellSize() const { return CELL_SIZE; }

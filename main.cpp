@@ -11,8 +11,8 @@ int main() {
     // Seed random number generator for different results each run
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
     
-    // Create the main window with initial size (board + mode indicator)
-    sf::RenderWindow window(sf::VideoMode({450, 480}), "Minesweeper");
+    // Create the main window with initial size (board + mode indicator + side panel)
+    sf::RenderWindow window(sf::VideoMode({670, 480}), "Minesweeper");
     
     Board board;
     BoardRenderer renderer(board, window);
@@ -85,6 +85,18 @@ int main() {
                 if (keyEvent && keyEvent->code == sf::Keyboard::Key::F) {
                     renderer.setDebugOverlay(true);
                 }
+                
+                // Speed controls: + or = to increase, - to decrease
+                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Equal || keyEvent->code == sf::Keyboard::Key::Hyphen)) {
+                    float currentSpeed = solver.getSpeed();
+                    if (keyEvent->code == sf::Keyboard::Key::Equal) {
+                        solver.setSpeed(currentSpeed + 0.5f);
+                        std::cout << "Speed increased to " << solver.getSpeed() << "x" << std::endl;
+                    } else {
+                        solver.setSpeed(currentSpeed - 0.5f);
+                        std::cout << "Speed decreased to " << solver.getSpeed() << "x" << std::endl;
+                    }
+                }
             }
             
             if (event->is<sf::Event::KeyReleased>()) {
@@ -109,6 +121,8 @@ int main() {
 
         // Render
         renderer.render();
+        renderer.drawStatsAndControls(solver.getWins(), solver.getLosses(), solver.getSpeed());
+        renderer.finishFrame();
 
         solver.makeMove();
         

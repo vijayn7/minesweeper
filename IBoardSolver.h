@@ -40,6 +40,7 @@ enum CellVal { ZERO = 0, ONE = 1, TWO = 2, THREE = 3, FOUR = 4, FIVE = 5, SIX = 
 
     virtual bool searchCell(int x, int y) const = 0;
     virtual bool isGameOver() const = 0;
+    virtual GameState getGameState() const = 0;
     virtual void reset() = 0;
 };
 
