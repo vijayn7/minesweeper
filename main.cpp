@@ -1,43 +1,50 @@
 #include <SFML/Graphics.hpp>
+#include "board.cpp"
+#include <optional>
 
-int main()
-{
-    // Grid configuration
-    const int gridSize = 9;
-    const float cellSize = 50.0f;
-    const float gridWidth = gridSize * cellSize;
-    const float gridHeight = gridSize * cellSize;
+int main() {
+    Board board;
     
     // Create the main window
-    sf::RenderWindow window(sf::VideoMode({static_cast<unsigned int>(gridWidth), static_cast<unsigned int>(gridHeight)}), "Minesweeper");
+    sf::RenderWindow window(sf::VideoMode({static_cast<unsigned int>(board.getWidth()), 
+                                          static_cast<unsigned int>(board.getHeight())}), 
+                           "Minesweeper");
 
     // Start the game loop
-    while (window.isOpen())
-    {
+    while (window.isOpen()) {
+
         // Process events
-        while (const std::optional event = window.pollEvent())
-        {
+        while (const std::optional event = window.pollEvent()) {
             // Close window: exit
             if (event->is<sf::Event::Closed>())
                 window.close();
+
+            if (event->is<sf::Event::KeyPressed>()) {
+                const auto& keyEvent = event->getIf<sf::Event::KeyPressed>();
+
+                if (keyEvent && keyEvent->code == sf::Keyboard::Key::Escape)
+                    window.close();
+
+                if (keyEvent && keyEvent->code == sf::Keyboard::Key::Space)
+                    board.toggleClickMode();
+            }
+
+            if (event->is<sf::Event::MouseButtonPressed>()) {
+                const auto& mouseEvent = event->getIf<sf::Event::MouseButtonPressed>();
+                if (mouseEvent) {
+                    int x = mouseEvent->position.x / static_cast<int>(board.getCellSize());
+                    int y = mouseEvent->position.y / static_cast<int>(board.getCellSize());
+                    
+                    board.handleClick(x, y);
+                }
+            }
         }
 
         // Clear screen
         window.clear(sf::Color::White);
 
-        // Draw the grid
-        for (int i = 0; i < gridSize; i++)
-        {
-            for (int j = 0; j < gridSize; j++)
-            {
-                sf::RectangleShape cell({cellSize - 2, cellSize - 2}); // -2 for spacing
-                cell.setPosition({i * cellSize + 1, j * cellSize + 1}); // +1 for spacing
-                cell.setFillColor(sf::Color(200, 200, 200));
-                cell.setOutlineThickness(1);
-                cell.setOutlineColor(sf::Color::Black);
-                window.draw(cell);
-            }
-        }
+        // Draw the board
+        board.drawCells(window);
 
         // Update the window
         window.display();
