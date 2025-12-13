@@ -11,7 +11,7 @@ int main() {
     
     Board board;
     BoardRenderer renderer(board, window);
-    algoSolver solver(board);
+    algoSolver solver(board, &renderer);
 
     // Game loop
     while (window.isOpen()) {

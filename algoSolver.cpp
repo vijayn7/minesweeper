@@ -1,9 +1,15 @@
 #include "IBoardSolver.h"
 #include "Board.h"
+#include <queue>
+
+using namespace std;
+
+class BoardRenderer;
 
 class algoSolver {
 private:
     IBoardSolver& gameBoard;
+    BoardRenderer* renderer;
     bool firstMove = true;
     sf::Clock moveClock;
     float moveDelay = 0.5f; // Delay between moves in seconds
@@ -16,7 +22,7 @@ private:
 
 public:
 
-    algoSolver(IBoardSolver& b) : gameBoard(b) {}
+    algoSolver(IBoardSolver& b, BoardRenderer* r) : gameBoard(b), renderer(r) {}
 
     void makeMove() {
         // Only make a move if enough time has passed
@@ -25,7 +31,10 @@ public:
         }
 
         // check if game is over
-        if (gameBoard.isGameOver()) gameBoard.reset(); firstMove = true;
+        if (gameBoard.isGameOver()) { 
+            gameBoard.reset(); 
+            firstMove = true;
+        }
 
         makeFirstMove();
         
@@ -49,6 +58,7 @@ public:
             } else if (clickDelay.getElapsedTime().asSeconds() >= preClickDelay) {
                 // Enough time has passed, now click
                 gameBoard.algoClick();
+                if (renderer) renderer->startClickAnimation();
                 waitingToClick = false;
                 
                 if (gameBoard.getCellVal(gameBoard.getSelectedX(), gameBoard.getSelectedY()) == Board::ZERO) {

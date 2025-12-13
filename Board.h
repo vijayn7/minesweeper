@@ -41,7 +41,7 @@ public:
     GameState getGameState() const { return currentGameState; }
     ClickMode getClickMode() const { return currentClickMode; }
     void toggleClickMode();
-    bool isGameOver() const;
+    bool isGameOver() const override;
     
     // Cell queries
     int getCellVal(int x, int y) const override;
@@ -53,7 +53,7 @@ public:
     void revealCell(int x, int y);
     void handleClick(int x, int y);
     bool algoClick() override;
-    void reset();
+    void reset() override;
     
     // Utility
     std::vector<std::vector<int>> getPlayerView() const override;

@@ -30,7 +30,7 @@ public:
     // Utility
     virtual bool searchCell(int x, int y) const = 0;
     virtual bool isGameOver() const = 0;
-    virtual bool reset() = 0;
+    virtual void reset() = 0;
 };
 
 #endif
