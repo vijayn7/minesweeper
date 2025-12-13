@@ -143,6 +143,9 @@ private:
         for (const auto& cell : numberedCells) {
             int x = cell.first;
             int y = cell.second;
+            
+            // Show inspection box
+            if (renderer) renderer->startInspection(x, y);
 
             int cellValue = gameBoard.getCellVal(x, y);
             vector<pair<int, int>> unrevealedNeighbors = gameBoard.getUnrevealedNeighbors(x, y);
@@ -179,6 +182,9 @@ private:
         for (const auto& cell : numberedCells) {
             int x = cell.first;
             int y = cell.second;
+            
+            // Show inspection box
+            if (renderer) renderer->startInspection(x, y);
 
             int cellValue = gameBoard.getCellVal(x, y);
             int flaggedCount = numFlaggedNeighbors(x, y);
@@ -209,6 +215,7 @@ private:
         while (!cellsToReveal.empty()) cellsToReveal.pop();
         while (!cellsToFlag.empty()) cellsToFlag.pop();
         queuedForFlagging.clear();
+        if (renderer) renderer->stopInspection();
         gameBoard.reset();
         firstMove = true;
         algoActive = true;
@@ -241,6 +248,7 @@ public:
 
         // Stop if algorithm is inactive
         if (!algoActive) {
+            if (renderer) renderer->stopInspection();
             return;
         }
 
@@ -250,6 +258,8 @@ public:
         }
 
         // Both queues are empty, check what phase we're in
+        // Clear inspection box when not actively searching
+        if (renderer) renderer->stopInspection();
         
         if (inRandomGuessPhase) {
             // Check if we have any 0 cells (cells with no adjacent mines)
@@ -281,6 +291,7 @@ public:
                 
                 // If no actions found after processing, end algo
                 cout << "No actions found after processing. Stopping algorithm." << endl;
+                if (renderer) renderer->stopInspection();
                 algoActive = false;
                 return;
             }
@@ -301,6 +312,7 @@ public:
             
             // If no actions found after processing, end algo
             cout << "Queue completed after processing. Stopping algorithm." << endl;
+            if (renderer) renderer->stopInspection();
             algoActive = false;
         }
     }

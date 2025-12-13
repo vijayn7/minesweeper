@@ -19,6 +19,12 @@ void BoardRenderer::render() {
     
     // Draw selection box with appropriate color
     drawSelectionBox(showClickAnimation ? CLICK : SELECT);
+    
+    // Draw inspection box if active
+    if (isInspecting) {
+        drawInspectionBox();
+    }
+    
     drawModeIndicator();
     drawGameOverScreen();
     window->display();
@@ -330,6 +336,41 @@ void BoardRenderer::startSelectionAnimation(int oldX, int oldY) {
     prevSelectedY = oldY;
     isAnimatingSelection = true;
     selectionAnimationClock.restart();
+}
+
+void BoardRenderer::startInspection(int x, int y) {
+    inspectX = x;
+    inspectY = y;
+    isInspecting = true;
+    inspectionAnimationClock.restart();
+}
+
+void BoardRenderer::stopInspection() {
+    isInspecting = false;
+    inspectX = -1;
+    inspectY = -1;
+}
+
+void BoardRenderer::drawInspectionBox() {
+    if (inspectX < 0 || inspectY < 0) return;
+    
+    // Pulsing animation
+    float elapsed = inspectionAnimationClock.getElapsedTime().asSeconds();
+    float pulse = 0.5f + 0.5f * std::sin(elapsed * 8.0f); // Oscillate between 0.5 and 1.0
+    
+    // Blue outline with pulsing opacity
+    sf::RectangleShape inspectionBox({CELL_SIZE, CELL_SIZE});
+    inspectionBox.setPosition({inspectX * CELL_SIZE, inspectY * CELL_SIZE});
+    inspectionBox.setFillColor(sf::Color::Transparent);
+    inspectionBox.setOutlineThickness(-3);
+    inspectionBox.setOutlineColor(sf::Color(0, 100, 255, static_cast<unsigned char>(100 + 155 * pulse)));
+    window->draw(inspectionBox);
+    
+    // Inner glow effect
+    sf::RectangleShape innerGlow({CELL_SIZE - 6, CELL_SIZE - 6});
+    innerGlow.setPosition({inspectX * CELL_SIZE + 3, inspectY * CELL_SIZE + 3});
+    innerGlow.setFillColor(sf::Color(100, 150, 255, static_cast<unsigned char>(30 * pulse)));
+    window->draw(innerGlow);
 }
 
 void BoardRenderer::drawDebugOverlay(int x, int y) {

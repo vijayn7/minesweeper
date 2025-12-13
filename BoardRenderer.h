@@ -24,6 +24,12 @@ private:
     int prevSelectedX = 0;
     int prevSelectedY = 0;
     
+    // Inspection animation (blue box for algorithm analysis)
+    bool isInspecting = false;
+    int inspectX = -1;
+    int inspectY = -1;
+    sf::Clock inspectionAnimationClock;
+    
 public:
     BoardRenderer(Board& board, sf::RenderWindow& window);
     
@@ -39,6 +45,8 @@ public:
     // Animation control
     void startClickAnimation();
     void startSelectionAnimation(int oldX, int oldY);
+    void startInspection(int x, int y);
+    void stopInspection();
     
     // Debug features
     void setDebugOverlay(bool enabled) { debugOverlayEnabled = enabled; }
@@ -53,6 +61,7 @@ private:
     void drawBomb(float centerX, float centerY);
     void drawNumber(int x, int y, int value);
     void drawDebugOverlay(int x, int y);
+    void drawInspectionBox();
 };
 
 #endif
