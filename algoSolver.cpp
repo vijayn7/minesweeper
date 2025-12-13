@@ -1,5 +1,6 @@
 #include "IBoardSolver.h"
 #include "Board.h"
+#include "solverUtilities.cpp"
 #include <queue>
 
 using namespace std;
@@ -20,6 +21,63 @@ private:
     queue<std::pair<int, int>> cellsToReveal;
     queue<std::pair<int, int>> cellsToFlag;
 
+    void queueRevealCell(pair<int, int> cell) {
+        cellsToReveal.push(cell);
+    }
+
+    void queueFlagCell(pair<int, int> cell) {
+        cellsToFlag.push(cell);
+    }
+
+    void queueRevealCells(const vector<pair<int, int>>& cells) {
+        for (const auto& cell : cells) {
+            cellsToReveal.push(cell);
+        }
+    }
+
+    void queueFlagCells(const vector<pair<int, int>>& cells) {
+        for (const auto& cell : cells) {
+            cellsToFlag.push(cell);
+        }
+    }
+
+
+    void nextRevealQueue(std::pair<int, int> cellParam) {
+        gameBoard.setClickMode(IBoardSolver::REVEAL);
+        auto cell = cellsToReveal.front();
+        cellsToReveal.pop();
+        gameBoard.setSelectedCell(cell.first, cell.second);
+        renderer->startClickAnimation();
+        gameBoard.algoClick();
+        moveClock.restart();
+        return;
+    }
+
+    void nextFlagQueue(std::pair<int, int> cellParam) {
+        gameBoard.setClickMode(IBoardSolver::FLAG);
+        auto cell = cellsToFlag.front();
+        cellsToFlag.pop();
+        gameBoard.setSelectedCell(cell.first, cell.second);
+        renderer->startClickAnimation();
+        gameBoard.algoClick();
+        moveClock.restart();
+        return;
+    }
+
+    bool preformNextAction() {
+        if (!cellsToReveal.empty()) {
+            nextRevealQueue(cellsToReveal.front());
+            return true;
+        }
+
+        if (!cellsToFlag.empty()) {
+            nextFlagQueue(cellsToFlag.front());
+            return true;
+        }
+
+        return false;
+    }
+
 public:
 
     algoSolver(IBoardSolver& b, BoardRenderer* r) : gameBoard(b), renderer(r) {}
@@ -36,37 +94,25 @@ public:
             firstMove = true;
         }
 
-        makeFirstMove();
-        
+        // Go through queued actions first
+
+        if (preformNextAction()) {
+            return;
+        }
+
+        // both queues are empty, make new decisions
+
+        // random guess
+        vector<pair<int, int>> unrevealedCells = gameBoard.getAllUnrevealedCells();
+        if (unrevealedCells.empty()) return; // No moves available
+        pair<int, int> move = solverUtilities::makeRandomMove(unrevealedCells);
+        queueRevealCell(move);
+
+        // Execute the move
+        preformNextAction();
+
         // Reset the clock after making a move
         moveClock.restart();
     }
-
-    void makeFirstMove() {
-        // randomly reveal until we get a 0 cell
-        if (firstMove) {
-            if (!waitingToClick) {
-                // Select a new random cell
-                int x = rand() % gameBoard.getGridSize();
-                int y = rand() % gameBoard.getGridSize();
-                
-                if (gameBoard.getPlayerView()[x][y] == -1) { // Unrevealed
-                    gameBoard.setSelectedCell(x, y);
-                    waitingToClick = true;
-                    clickDelay.restart();
-                }
-            } else if (clickDelay.getElapsedTime().asSeconds() >= preClickDelay) {
-                // Enough time has passed, now click
-                gameBoard.algoClick();
-                if (renderer) renderer->startClickAnimation();
-                waitingToClick = false;
-                
-                if (gameBoard.getCellVal(gameBoard.getSelectedX(), gameBoard.getSelectedY()) == Board::ZERO) {
-                    firstMove = false;
-                }
-            }
-        }
-    }
-
 
 };

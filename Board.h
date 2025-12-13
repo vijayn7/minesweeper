@@ -5,11 +5,6 @@
 #include "IBoardSolver.h"
 
 class Board : public IBoardSolver {
-public:
-    enum ClickMode { REVEAL, FLAG };
-    enum GameState { PLAYING, WON, LOST };
-    
-    enum CellVal { ZERO = 0, ONE = 1, TWO = 2, THREE = 3, FOUR = 4, FIVE = 5, SIX = 6, SEVEN = 7, EIGHT = 8, BOMB = 9 };
     
 private:
     static const int GRID_SIZE = 9;
@@ -42,6 +37,7 @@ public:
     ClickMode getClickMode() const { return currentClickMode; }
     void toggleClickMode();
     bool isGameOver() const override;
+    void setClickMode(ClickMode mode) override;
     
     // Cell queries
     int getCellVal(int x, int y) const override;
@@ -57,6 +53,7 @@ public:
     
     // Utility
     std::vector<std::vector<int>> getPlayerView() const override;
+    std::vector<std::pair<int, int>> getAllUnrevealedCells() const override;
     
 private:
     void spawnMines();

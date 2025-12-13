@@ -222,3 +222,19 @@ bool Board::searchCell(int x, int y) const {
 bool Board::isGameOver() const {
     return currentGameState == WON || currentGameState == LOST;
 }
+
+vector<pair<int, int>> Board::getAllUnrevealedCells() const {
+    vector<pair<int, int>> revealedCells;
+    for (int x = 0; x < GRID_SIZE; x++) {
+        for (int y = 0; y < GRID_SIZE; y++) {
+            if (!revealedGrid[x][y]) {
+                revealedCells.emplace_back(x, y);
+            }
+        }
+    }
+    return revealedCells;
+}
+
+void Board::setClickMode(ClickMode mode) {
+    currentClickMode = mode;
+}

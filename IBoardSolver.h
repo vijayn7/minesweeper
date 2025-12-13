@@ -9,6 +9,9 @@
  */
 class IBoardSolver {
 public:
+enum ClickMode { REVEAL, FLAG };
+enum GameState { PLAYING, WON, LOST };
+enum CellVal { ZERO = 0, ONE = 1, TWO = 2, THREE = 3, FOUR = 4, FIVE = 5, SIX = 6, SEVEN = 7, EIGHT = 8, BOMB = 9 };
     virtual ~IBoardSolver() = default;
     
     // Grid information
@@ -26,8 +29,10 @@ public:
     
     // Actions
     virtual bool algoClick() = 0;
+    virtual void setClickMode(ClickMode mode) = 0;
     
     // Utility
+    virtual std::vector<std::pair<int, int>> getAllUnrevealedCells() const = 0;
     virtual bool searchCell(int x, int y) const = 0;
     virtual bool isGameOver() const = 0;
     virtual void reset() = 0;
