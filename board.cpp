@@ -19,6 +19,7 @@ private:
 public:
     Board(sf::RenderWindow& window) : gridData(GRID_SIZE, vector<int>(GRID_SIZE, 0)), windowPtr(&window) {
         spawnMines();
+        solveForCellValues();
     }
 
     int getGridSize() const { return GRID_SIZE; }
@@ -64,20 +65,51 @@ public:
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
 
-                // Draw cell at (i, j)
-                sf::RectangleShape cell({CELL_SIZE - 2, CELL_SIZE - 2});
-                cell.setPosition({i * CELL_SIZE + 1, j * CELL_SIZE + 1});
-                cell.setFillColor(sf::Color(200, 200, 200));
-                cell.setOutlineThickness(1);
-                cell.setOutlineColor(sf::Color::Black);
+                // Draw cell shadow for depth
+                sf::RectangleShape shadow({CELL_SIZE - 4, CELL_SIZE - 4});
+                shadow.setPosition({i * CELL_SIZE + 3, j * CELL_SIZE + 3});
+                shadow.setFillColor(sf::Color(100, 100, 100, 80));
+                window.draw(shadow);
+
+                // Draw main cell with gradient-like effect
+                sf::RectangleShape cell({CELL_SIZE - 4, CELL_SIZE - 4});
+                cell.setPosition({i * CELL_SIZE + 2, j * CELL_SIZE + 2});
+                cell.setFillColor(sf::Color(189, 189, 189));
+                cell.setOutlineThickness(2);
+                cell.setOutlineColor(sf::Color(245, 245, 245));
                 window.draw(cell);
                 
-                //Draw number
+                // Draw inner border for 3D effect
+                sf::RectangleShape innerBorder({CELL_SIZE - 8, CELL_SIZE - 8});
+                innerBorder.setPosition({i * CELL_SIZE + 4, j * CELL_SIZE + 4});
+                innerBorder.setFillColor(sf::Color::Transparent);
+                innerBorder.setOutlineThickness(1);
+                innerBorder.setOutlineColor(sf::Color(140, 140, 140));
+                window.draw(innerBorder);
+                
+                // Draw number with color coding
                 if (gridData[i][j] != 0) {
                     static sf::Font font("font.ttf");
-                    sf::Text numberText(font, std::to_string(gridData[i][j]), 24);
-                    numberText.setFillColor(sf::Color::Black);
-                    numberText.setPosition({i * CELL_SIZE + CELL_SIZE / 4, j * CELL_SIZE + CELL_SIZE / 8});
+                    string displayText = (gridData[i][j] == -1) ? "💣" : std::to_string(gridData[i][j]);
+                    sf::Text numberText(font, displayText, 28);
+                    
+                    // Color code based on value
+                    if (gridData[i][j] == -1) {
+                        numberText.setFillColor(sf::Color::Red);
+                    } else if (gridData[i][j] == 1) {
+                        numberText.setFillColor(sf::Color::Blue);
+                    } else if (gridData[i][j] == 2) {
+                        numberText.setFillColor(sf::Color::Green);
+                    } else if (gridData[i][j] == 3) {
+                        numberText.setFillColor(sf::Color::Red);
+                    } else if (gridData[i][j] == 4) {
+                        numberText.setFillColor(sf::Color(0, 0, 139)); // Dark blue
+                    } else {
+                        numberText.setFillColor(sf::Color(139, 0, 0)); // Dark red
+                    }
+                    
+                    numberText.setStyle(sf::Text::Bold);
+                    numberText.setPosition({i * CELL_SIZE + CELL_SIZE / 3, j * CELL_SIZE + CELL_SIZE / 6});
                     window.draw(numberText);
                 }
 
@@ -99,13 +131,47 @@ public:
         }
     }
 
+    void solveForCellValues() {
+        for (int x = 0; x < GRID_SIZE; x++) {
+            for (int y = 0; y < GRID_SIZE; y++) {
+                if (gridData[x][y] == -1) continue; 
+
+                int mineCount = 0;
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dy = -1; dy <= 1; dy++) {
+                        if (dx == 0 && dy == 0) continue; 
+                        if (isMine(x + dx, y + dy)) {
+                            mineCount++;
+                        }
+                    }
+                }
+                gridData[x][y] = mineCount;
+            }   
+        }
+    }
+
+    bool isMine(int x, int y) {
+        if (x < 0 || x > GRID_SIZE - 1 || y < 0 || y > GRID_SIZE - 1)
+            return false;
+        return gridData[x][y] == -1;
+    }
+
     void drawSelectionBox(sf::RenderWindow& window) {
         if (selectedX >= 0 && selectedY >= 0) {
+            // Outer glow
+            sf::RectangleShape outerGlow({CELL_SIZE + 4, CELL_SIZE + 4});
+            outerGlow.setPosition({selectedX * CELL_SIZE - 2, selectedY * CELL_SIZE - 2});
+            outerGlow.setFillColor(sf::Color(255, 215, 0, 50));
+            outerGlow.setOutlineThickness(2);
+            outerGlow.setOutlineColor(sf::Color(255, 215, 0, 100));
+            window.draw(outerGlow);
+            
+            // Main selection box
             sf::RectangleShape selectionBox({CELL_SIZE, CELL_SIZE});
             selectionBox.setPosition({selectedX * CELL_SIZE, selectedY * CELL_SIZE});
-            selectionBox.setFillColor(sf::Color(0, 0, 0, 0));
+            selectionBox.setFillColor(sf::Color(255, 255, 0, 30));
             selectionBox.setOutlineThickness(3);
-            selectionBox.setOutlineColor(sf::Color::Red);
+            selectionBox.setOutlineColor(sf::Color(255, 215, 0));
             window.draw(selectionBox);
         }
     }
@@ -140,6 +206,10 @@ public:
             if (keyEvent && keyEvent->code == sf::Keyboard::Key::Enter) {
                 handleClick(selectedX, selectedY);
             }
+
+            if (keyEvent && keyEvent->code == sf::Keyboard::Key::R) {
+                reset();
+            }
         }
 
         if (event->is<sf::Event::MouseButtonPressed>()) {
@@ -160,5 +230,14 @@ public:
         drawCells(*windowPtr);
         drawSelectionBox(*windowPtr);
         windowPtr->display();
+    }
+
+    void reset() {
+        gridData = vector<vector<int>>(GRID_SIZE, vector<int>(GRID_SIZE, 0));
+        spawnMines();
+        solveForCellValues();
+        selectedX = 0;
+        selectedY = 0;
+        currentClickMode = REVEAL;
     }
 };
