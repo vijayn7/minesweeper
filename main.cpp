@@ -27,6 +27,24 @@ int main() {
 
                 if (keyEvent && keyEvent->code == sf::Keyboard::Key::Space)
                     board.toggleClickMode();
+
+                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Left || keyEvent->code == sf::Keyboard::Key::A))
+                    board.moveLeft();
+
+                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Right || keyEvent->code == sf::Keyboard::Key::D))
+                    board.moveRight();
+
+                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::W))
+                    board.moveUp();
+
+                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S))
+                    board.moveDown();
+
+                if (keyEvent && keyEvent->code == sf::Keyboard::Key::Enter) {
+                    int x = board.getSelectedX();
+                    int y = board.getSelectedY();
+                    board.handleClick(x, y);
+                }
             }
 
             if (event->is<sf::Event::MouseButtonPressed>()) {

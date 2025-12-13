@@ -11,8 +11,8 @@ private:
     enum clickMode { REVEAL, FLAG }; 
     clickMode currentClickMode = REVEAL;
     vector<vector<int>> gridData;
-    int selectedX = -1;
-    int selectedY = -1;
+    int selectedX = 0;
+    int selectedY = 0;
 
 public:
     Board() : gridData(GRID_SIZE, vector<int>(GRID_SIZE, 0)) {
@@ -23,6 +23,25 @@ public:
     float getCellSize() const { return CELL_SIZE; }
     float getWidth() const { return GRID_SIZE * CELL_SIZE; }
     float getHeight() const { return GRID_SIZE * CELL_SIZE; }
+
+    int getSelectedX() const { return selectedX; }
+    int getSelectedY() const { return selectedY; }
+
+    void moveLeft() {
+        if (selectedX > 0) selectedX--;
+    }
+
+    void moveRight() {
+        if (selectedX < GRID_SIZE - 1) selectedX++;
+    }
+
+    void moveUp() {
+        if (selectedY > 0) selectedY--;
+    }
+
+    void moveDown() {
+        if (selectedY < GRID_SIZE - 1) selectedY++;
+    }
 
     void handleClick(int x, int y) {
         selectedX = x;
