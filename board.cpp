@@ -87,16 +87,56 @@ public:
                 innerBorder.setOutlineColor(sf::Color(140, 140, 140));
                 window.draw(innerBorder);
                 
-                // Draw number with color coding
-                if (gridData[i][j] != 0) {
+                // Draw mines or numbers
+                if (gridData[i][j] == -1) {
+                    // Draw bomb
+                    float centerX = i * CELL_SIZE + CELL_SIZE / 2;
+                    float centerY = j * CELL_SIZE + CELL_SIZE / 2;
+                    
+                    // Bomb body (large circle)
+                    sf::CircleShape bombBody(12);
+                    bombBody.setPosition({centerX - 12, centerY - 12});
+                    bombBody.setFillColor(sf::Color::Black);
+                    window.draw(bombBody);
+                    
+                    // Highlight on bomb (small circle for shine)
+                    sf::CircleShape highlight(4);
+                    highlight.setPosition({centerX - 6, centerY - 9});
+                    highlight.setFillColor(sf::Color(100, 100, 100));
+                    window.draw(highlight);
+                    
+                    // Bomb spikes (lines radiating out)
+                    for (int angle = 0; angle < 360; angle += 45) {
+                        float rad = angle * 3.14159f / 180.0f;
+                        sf::RectangleShape spike({2, 8});
+                        spike.setPosition({centerX - 1, centerY - 18});
+                        spike.setFillColor(sf::Color::Black);
+                        spike.setOrigin({1, 0});
+                        spike.setRotation(sf::degrees(angle));
+                        spike.setPosition({centerX, centerY});
+                        window.draw(spike);
+                    }
+                    
+                    // Fuse
+                    sf::RectangleShape fuse({2, 6});
+                    fuse.setPosition({centerX + 8, centerY - 16});
+                    fuse.setFillColor(sf::Color(139, 69, 19)); // Brown
+                    fuse.setRotation(sf::degrees(-30));
+                    window.draw(fuse);
+                    
+                    // Spark at end of fuse
+                    sf::CircleShape spark(2);
+                    spark.setPosition({centerX + 11, centerY - 18});
+                    spark.setFillColor(sf::Color(255, 165, 0)); // Orange
+                    window.draw(spark);
+                    
+                } else if (gridData[i][j] != 0) {
+                    // Draw number with color coding
                     static sf::Font font("font.ttf");
-                    string displayText = (gridData[i][j] == -1) ? "💣" : std::to_string(gridData[i][j]);
-                    sf::Text numberText(font, displayText, 28);
+                    sf::Text numberText(font, std::to_string(gridData[i][j]), 28);
                     
                     // Color code based on value
-                    if (gridData[i][j] == -1) {
-                        numberText.setFillColor(sf::Color::Red);
-                    } else if (gridData[i][j] == 1) {
+                    if (gridData[i][j] == 1) {
                         numberText.setFillColor(sf::Color::Blue);
                     } else if (gridData[i][j] == 2) {
                         numberText.setFillColor(sf::Color::Green);
