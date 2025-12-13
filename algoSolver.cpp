@@ -222,12 +222,60 @@ private:
         inRandomGuessPhase = true;
     }
 
+    // Cell - flagged neighbors == 1 && unrev neighbors - flagged neighbors == 1
+    // flag the unrev neighbor that is not flagged
+    void subtractionFlagging() {
+        vector<pair<int, int>> numberedCells = getAllRevealedNumberedCells();
+
+        for (const auto& cell : numberedCells) {
+            int x = cell.first;
+            int y = cell.second;
+            
+            // Show inspection box
+            if (renderer) renderer->startInspection(x, y);
+
+            int cellValue = gameBoard.getCellVal(x, y);
+            vector<pair<int, int>> unrevealedNeighbors = gameBoard.getUnrevealedNeighbors(x, y);
+            vector<pair<int, int>> flaggedNeighbors = gameBoard.getFlaggedNeighbors(x, y);
+            int flaggedCount = static_cast<int>(flaggedNeighbors.size());
+            int unrevCount = static_cast<int>(unrevealedNeighbors.size());
+
+            if (flaggedCount == cellValue - 1 && unrevCount - flaggedCount == 1) {
+                for (const auto& neighbor : unrevealedNeighbors) {
+                    // Only queue if not flagged
+                    bool isFlagged = false;
+                    for (const auto& flagged : flaggedNeighbors) {
+                        if (flagged.first == neighbor.first && flagged.second == neighbor.second) {
+                            isFlagged = true;
+                            break;
+                        }
+                    }
+                    if (!isFlagged) {
+                        queueFlagCell(neighbor);
+                        return; // Only queue one cell at a time
+                    }
+                }
+            }
+        }
+    }
+
     void processGrid() {
+        // Only run each function if both queues are still empty
+        
         // Flags
-        flagCornersOfOnes();
+        if (cellsToReveal.empty() && cellsToFlag.empty()) {
+            flagCornersOfOnes();
+        }
+        
+        // Subtraction flagging
+        if (cellsToReveal.empty() && cellsToFlag.empty()) {
+            subtractionFlagging();
+        }
 
         // Reveals
-        revealSatisfiedCells();
+        if (cellsToReveal.empty() && cellsToFlag.empty()) {
+            revealSatisfiedCells();
+        }
     }
 
 public:
@@ -289,8 +337,16 @@ public:
                     return;
                 }
                 
-                // If no actions found after processing, end algo
-                cout << "No actions found after processing. Stopping algorithm." << endl;
+                // If no actions found after processing, make a random guess
+                cout << "No logical moves found after transition. Making random guess." << endl;
+                randomGuess();
+                if (preformNextAction()) {
+                    moveClock.restart();
+                    return;
+                }
+                
+                // If no moves available at all, end algo
+                cout << "No moves available. Stopping algorithm." << endl;
                 if (renderer) renderer->stopInspection();
                 algoActive = false;
                 return;
@@ -310,8 +366,16 @@ public:
                 return;
             }
             
-            // If no actions found after processing, end algo
-            cout << "Queue completed after processing. Stopping algorithm." << endl;
+            // If no actions found after processing, make a random guess
+            cout << "No logical moves found. Making random guess." << endl;
+            randomGuess();
+            if (preformNextAction()) {
+                moveClock.restart();
+                return;
+            }
+            
+            // If no moves available at all, end algo
+            cout << "No moves available. Stopping algorithm." << endl;
             if (renderer) renderer->stopInspection();
             algoActive = false;
         }
