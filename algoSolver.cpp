@@ -87,7 +87,14 @@ private:
 
     // if a cell has a 1 and only one unrevealed neighbor, flag that neighbor
     void flagCornersOfOnes() {
-        
+        vector<pair<int, int>> ones = gameBoard.getOnes();
+
+        for (const auto& cell : ones) {
+            vector<pair<int, int>> unrevealedNeighbors = gameBoard.getUnrevealedNeighbors(cell.first, cell.second);
+            if (unrevealedNeighbors.size() == 1) {
+                queueFlagCell(unrevealedNeighbors[0]);
+            }
+        }
     }
 
 public:
@@ -113,6 +120,9 @@ public:
         }
 
         // both queues are empty, make new decisions
+
+        //Flag corners of ones
+        flagCornersOfOnes();
 
         // random guess
         randomGuess();
