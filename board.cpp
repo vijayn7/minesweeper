@@ -12,6 +12,7 @@ private:
     clickMode currentClickMode = REVEAL;
     vector<vector<int>> gridData;
     vector<vector<bool>> revealedGrid;
+    vector<vector<bool>> flaggedGrid;
     int selectedX = 0;
     int selectedY = 0;
 
@@ -22,6 +23,7 @@ private:
 public:
     Board(sf::RenderWindow& window) : gridData(GRID_SIZE, vector<int>(GRID_SIZE, 0)), 
                                         revealedGrid(GRID_SIZE, vector<bool>(GRID_SIZE, false)),
+                                        flaggedGrid(GRID_SIZE, vector<bool>(GRID_SIZE, false)),
                                         windowPtr(&window) {
         spawnMines();
         solveForCellValues();
@@ -86,9 +88,16 @@ public:
              << gridData[x][y] << endl;
         
         if (currentClickMode == REVEAL) {
-            revealCell(x, y);
+            // Can't reveal a flagged cell
+            if (!flaggedGrid[x][y]) {
+                revealCell(x, y);
+            }
         } else {
-            // TODO: Implement flag logic
+            // Can't flag a revealed cell
+            if (!revealedGrid[x][y]) {
+                flaggedGrid[x][y] = !flaggedGrid[x][y];
+                cout << (flaggedGrid[x][y] ? "Flagged" : "Unflagged") << " cell (" << x << ", " << y << ")" << endl;
+            }
         }
     }
 
@@ -134,6 +143,26 @@ public:
                     innerBorder.setOutlineThickness(1);
                     innerBorder.setOutlineColor(sf::Color(140, 140, 140));
                     window.draw(innerBorder);
+                    
+                    // Draw flag if cell is flagged
+                    if (flaggedGrid[i][j]) {
+                        float centerX = i * CELL_SIZE + CELL_SIZE / 2;
+                        float centerY = j * CELL_SIZE + CELL_SIZE / 2;
+                        
+                        // Flag pole
+                        sf::RectangleShape pole({2, 20});
+                        pole.setPosition({centerX - 1, centerY - 15});
+                        pole.setFillColor(sf::Color::Black);
+                        window.draw(pole);
+                        
+                        // Flag fabric (triangle)
+                        sf::ConvexShape flag(3);
+                        flag.setPoint(0, {centerX + 1, centerY - 15});
+                        flag.setPoint(1, {centerX + 13, centerY - 8});
+                        flag.setPoint(2, {centerX + 1, centerY - 1});
+                        flag.setFillColor(sf::Color::Red);
+                        window.draw(flag);
+                    }
                 }
                 
                 // Draw mines or numbers only if revealed
@@ -331,6 +360,7 @@ public:
     void reset() {
         gridData = vector<vector<int>>(GRID_SIZE, vector<int>(GRID_SIZE, 0));
         revealedGrid = vector<vector<bool>>(GRID_SIZE, vector<bool>(GRID_SIZE, false));
+        flaggedGrid = vector<vector<bool>>(GRID_SIZE, vector<bool>(GRID_SIZE, false));
         spawnMines();
         solveForCellValues();
         selectedX = 0;
