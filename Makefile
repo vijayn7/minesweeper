@@ -9,7 +9,7 @@ LIBS = -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
 TARGET = m
 
 # Source files
-SOURCES = main.cpp
+SOURCES = main.cpp Board.cpp BoardRenderer.cpp
 
 # Object files
 OBJECTS = $(SOURCES:.cpp=.o)
