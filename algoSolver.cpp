@@ -78,6 +78,13 @@ private:
         return false;
     }
 
+    void randomGuess() {
+        vector<pair<int, int>> unrevealedCells = gameBoard.getAllUnrevealedCells();
+        if (unrevealedCells.empty()) return; // No moves available
+        pair<int, int> move = solverUtilities::makeRandomMove(unrevealedCells);
+        queueRevealCell(move);
+    }
+
 public:
 
     algoSolver(IBoardSolver& b, BoardRenderer* r) : gameBoard(b), renderer(r) {}
@@ -103,10 +110,7 @@ public:
         // both queues are empty, make new decisions
 
         // random guess
-        vector<pair<int, int>> unrevealedCells = gameBoard.getAllUnrevealedCells();
-        if (unrevealedCells.empty()) return; // No moves available
-        pair<int, int> move = solverUtilities::makeRandomMove(unrevealedCells);
-        queueRevealCell(move);
+        randomGuess();
 
         // Execute the move
         preformNextAction();
