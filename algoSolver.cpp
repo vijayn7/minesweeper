@@ -2,6 +2,8 @@
 #include "Board.h"
 #include "solverUtilities.cpp"
 #include <queue>
+#include <set>
+#include <iostream>
 
 using namespace std;
 
@@ -20,13 +22,19 @@ private:
 
     queue<std::pair<int, int>> cellsToReveal;
     queue<std::pair<int, int>> cellsToFlag;
+    set<std::pair<int, int>> queuedForFlagging; // Track cells already queued for flagging
+    bool algoActive = true; // Controls whether the algorithm should continue making moves
+    bool inRandomGuessPhase = true; // Track if we're still in random guessing phase
 
     void queueRevealCell(pair<int, int> cell) {
         cellsToReveal.push(cell);
     }
 
     void queueFlagCell(pair<int, int> cell) {
-        cellsToFlag.push(cell);
+        if (queuedForFlagging.find(cell) == queuedForFlagging.end()) {
+            cellsToFlag.push(cell);
+            queuedForFlagging.insert(cell);
+        }
     }
 
     void queueRevealCells(const vector<pair<int, int>>& cells) {
@@ -46,6 +54,9 @@ private:
         gameBoard.setClickMode(IBoardSolver::REVEAL);
         auto cell = cellsToReveal.front();
         cellsToReveal.pop();
+        if (cellsToReveal.empty()) {
+            cout << "Reveal queue emptied" << endl;
+        }
         gameBoard.setSelectedCell(cell.first, cell.second);
         renderer->startClickAnimation();
         gameBoard.algoClick();
@@ -57,6 +68,9 @@ private:
         gameBoard.setClickMode(IBoardSolver::FLAG);
         auto cell = cellsToFlag.front();
         cellsToFlag.pop();
+        if (cellsToFlag.empty()) {
+            cout << "Flag queue emptied" << endl;
+        }
         gameBoard.setSelectedCell(cell.first, cell.second);
         renderer->startClickAnimation();
         gameBoard.algoClick();
@@ -89,12 +103,27 @@ private:
     void flagCornersOfOnes() {
         vector<pair<int, int>> ones = gameBoard.getOnes();
 
-        for (const auto& cell : ones) {
-            vector<pair<int, int>> unrevealedNeighbors = gameBoard.getUnrevealedNeighbors(cell.first, cell.second);
-            if (unrevealedNeighbors.size() == 1) {
+        for (const auto& oneCell : ones) {
+            int x = oneCell.first;
+            int y = oneCell.second;
+
+            vector<pair<int, int>> unrevealedNeighbors = gameBoard.getUnrevealedNeighbors(x, y);
+            vector<pair<int, int>> flaggedNeighbors = gameBoard.getFlaggedNeighbors(x, y);
+
+            if (unrevealedNeighbors.size() == 1 && flaggedNeighbors.size() == 0) {
                 queueFlagCell(unrevealedNeighbors[0]);
             }
         }
+    }
+
+    void resetSolverState() {
+        while (!cellsToReveal.empty()) cellsToReveal.pop();
+        while (!cellsToFlag.empty()) cellsToFlag.pop();
+        queuedForFlagging.clear();
+        gameBoard.reset();
+        firstMove = true;
+        algoActive = true;
+        inRandomGuessPhase = true;
     }
 
 public:
@@ -109,29 +138,44 @@ public:
 
         // check if game is over
         if (gameBoard.isGameOver()) { 
-            gameBoard.reset(); 
-            firstMove = true;
+            resetSolverState();
+            return;
+        }
+
+        // Stop if algorithm is inactive
+        if (!algoActive) {
+            return;
         }
 
         // Go through queued actions first
-
         if (preformNextAction()) {
             return;
         }
 
-        // both queues are empty, make new decisions
-
-        //Flag corners of ones
-        flagCornersOfOnes();
-
-        // random guess
-        randomGuess();
-
-        // Execute the move
-        preformNextAction();
-
-        // Reset the clock after making a move
-        moveClock.restart();
+        // Both queues are empty, check what phase we're in
+        
+        if (inRandomGuessPhase) {
+            // Try to find flags for corners of ones
+            flagCornersOfOnes();
+            
+            // If we found something to flag, transition out of random guess phase
+            if (!cellsToFlag.empty()) {
+                cout << "Algo found flags! Transitioning to processing phase." << endl;
+                inRandomGuessPhase = false;
+                preformNextAction();
+                moveClock.restart();
+                return;
+            }
+            
+            // Still in random guess phase, make a random guess
+            randomGuess();
+            preformNextAction();
+            moveClock.restart();
+        } else {
+            // We've completed the queue after finding flags, stop the algorithm
+            cout << "Queue completed. Stopping algorithm." << endl;
+            algoActive = false;
+        }
     }
 
 };

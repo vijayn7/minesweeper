@@ -269,6 +269,23 @@ vector<pair<int, int>> Board::getUnrevealedNeighbors(int x, int y) const {
     return neighbors;
 }
 
+vector<pair<int, int>> Board::getFlaggedNeighbors(int x, int y) const {
+    vector<pair<int, int>> neighbors;
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            if (dx == 0 && dy == 0) continue;
+            int nx = x + dx;
+            int ny = y + dy;
+            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                if (flaggedGrid[nx][ny]) {
+                    neighbors.emplace_back(nx, ny);
+                }
+            }
+        }
+    }
+    return neighbors;
+}
+
 vector<pair<int, int>> Board::getOnes() const {
     vector<pair<int, int>> ones;
     for (int x = 0; x < GRID_SIZE; x++) {
