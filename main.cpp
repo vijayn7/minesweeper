@@ -11,14 +11,14 @@ int main()
     sf::Sprite sprite(texture);
 
     // Create a graphical text to display
-    const sf::Font font("arial.ttf");
+    const sf::Font font("GoogleSansCode-VariableFont_wght.ttf");
     sf::Text text(font, "Hello SFML", 50);
 
     // Load a music to play
-    sf::Music music("nice_music.ogg");
+    // sf::Music music("nice_music.ogg");
 
     // Play the music
-    music.play();
+    // music.play();
 
     // Start the game loop
     while (window.isOpen())
