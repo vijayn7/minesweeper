@@ -17,6 +17,13 @@ private:
     float clickAnimationDuration = 0.3f;
     bool debugOverlayEnabled = false;
     
+    // Selection animation
+    bool isAnimatingSelection = false;
+    sf::Clock selectionAnimationClock;
+    float selectionAnimationDuration = 0.15f;
+    int prevSelectedX = 0;
+    int prevSelectedY = 0;
+    
 public:
     BoardRenderer(Board& board, sf::RenderWindow& window);
     
@@ -31,6 +38,7 @@ public:
     
     // Animation control
     void startClickAnimation();
+    void startSelectionAnimation(int oldX, int oldY);
     
     // Debug features
     void setDebugOverlay(bool enabled) { debugOverlayEnabled = enabled; }

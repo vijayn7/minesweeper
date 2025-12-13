@@ -12,19 +12,27 @@ Board::Board() : gridData(GRID_SIZE, vector<CellVal>(GRID_SIZE, ZERO)),
 }
 
 void Board::moveLeft() {
-    if (selectedX > 0) selectedX--;
+    if (selectedX > 0) {
+        selectedX--;
+    }
 }
 
 void Board::moveRight() {
-    if (selectedX < GRID_SIZE - 1) selectedX++;
+    if (selectedX < GRID_SIZE - 1) {
+        selectedX++;
+    }
 }
 
 void Board::moveUp() {
-    if (selectedY > 0) selectedY--;
+    if (selectedY > 0) {
+        selectedY--;
+    }
 }
 
 void Board::moveDown() {
-    if (selectedY < GRID_SIZE - 1) selectedY++;
+    if (selectedY < GRID_SIZE - 1) {
+        selectedY++;
+    }
 }
 
 int Board::getCellVal(int x, int y) const {

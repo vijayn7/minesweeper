@@ -1,5 +1,7 @@
 #include "BoardRenderer.h"
 #include <SFML/Graphics.hpp>
+#include <cmath>
+#include <algorithm>
 
 BoardRenderer::BoardRenderer(Board& b, sf::RenderWindow& w) 
     : board(&b), window(&w) {}
@@ -286,10 +288,31 @@ void BoardRenderer::drawSelectionBox(SelectionType type) {
     int selectedX = board->getSelectedX();
     int selectedY = board->getSelectedY();
     
+    // Calculate interpolated position for animation
+    float drawX = static_cast<float>(selectedX);
+    float drawY = static_cast<float>(selectedY);
+    
+    if (isAnimatingSelection) {
+        float elapsedTime = selectionAnimationClock.getElapsedTime().asSeconds();
+        float progress = std::min(elapsedTime / selectionAnimationDuration, 1.0f);
+        
+        // Ease-out cubic function for smooth deceleration
+        float easedProgress = 1.0f - std::pow(1.0f - progress, 3.0f);
+        
+        // Interpolate between previous and current position
+        drawX = prevSelectedX + (selectedX - prevSelectedX) * easedProgress;
+        drawY = prevSelectedY + (selectedY - prevSelectedY) * easedProgress;
+        
+        // End animation when complete
+        if (progress >= 1.0f) {
+            isAnimatingSelection = false;
+        }
+    }
+    
     if (selectedX >= 0 && selectedY >= 0) {
         // Subtle selection highlight
         sf::RectangleShape selectionBox({CELL_SIZE, CELL_SIZE});
-        selectionBox.setPosition({selectedX * CELL_SIZE, selectedY * CELL_SIZE});
+        selectionBox.setPosition({drawX * CELL_SIZE, drawY * CELL_SIZE});
         selectionBox.setFillColor(boxColor);
         selectionBox.setOutlineThickness(-2);
         selectionBox.setOutlineColor(sf::Color(80, 80, 80, 180));
@@ -300,6 +323,13 @@ void BoardRenderer::drawSelectionBox(SelectionType type) {
 void BoardRenderer::startClickAnimation() {
     showClickAnimation = true;
     clickAnimationClock.restart();
+}
+
+void BoardRenderer::startSelectionAnimation(int oldX, int oldY) {
+    prevSelectedX = oldX;
+    prevSelectedY = oldY;
+    isAnimatingSelection = true;
+    selectionAnimationClock.restart();
 }
 
 void BoardRenderer::drawDebugOverlay(int x, int y) {

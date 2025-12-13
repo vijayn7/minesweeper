@@ -37,17 +37,41 @@ int main() {
                 if (keyEvent && keyEvent->code == sf::Keyboard::Key::Space)
                     board.toggleClickMode();
 
-                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Left || keyEvent->code == sf::Keyboard::Key::A))
+                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Left || keyEvent->code == sf::Keyboard::Key::A)) {
+                    int oldX = board.getSelectedX();
+                    int oldY = board.getSelectedY();
                     board.moveLeft();
+                    if (board.getSelectedX() != oldX || board.getSelectedY() != oldY) {
+                        renderer.startSelectionAnimation(oldX, oldY);
+                    }
+                }
 
-                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Right || keyEvent->code == sf::Keyboard::Key::D))
+                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Right || keyEvent->code == sf::Keyboard::Key::D)) {
+                    int oldX = board.getSelectedX();
+                    int oldY = board.getSelectedY();
                     board.moveRight();
+                    if (board.getSelectedX() != oldX || board.getSelectedY() != oldY) {
+                        renderer.startSelectionAnimation(oldX, oldY);
+                    }
+                }
 
-                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::W))
+                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Up || keyEvent->code == sf::Keyboard::Key::W)) {
+                    int oldX = board.getSelectedX();
+                    int oldY = board.getSelectedY();
                     board.moveUp();
+                    if (board.getSelectedX() != oldX || board.getSelectedY() != oldY) {
+                        renderer.startSelectionAnimation(oldX, oldY);
+                    }
+                }
 
-                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S))
+                if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Down || keyEvent->code == sf::Keyboard::Key::S)) {
+                    int oldX = board.getSelectedX();
+                    int oldY = board.getSelectedY();
                     board.moveDown();
+                    if (board.getSelectedX() != oldX || board.getSelectedY() != oldY) {
+                        renderer.startSelectionAnimation(oldX, oldY);
+                    }
+                }
 
                 if (keyEvent && keyEvent->code == sf::Keyboard::Key::Enter) {
                     board.handleClick(board.getSelectedX(), board.getSelectedY());

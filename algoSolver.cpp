@@ -65,7 +65,11 @@ private:
         if (cellsToReveal.empty()) {
             cout << "Reveal queue emptied" << endl;
         }
+        // Trigger selection animation from current position to target
+        int oldX = gameBoard.getSelectedX();
+        int oldY = gameBoard.getSelectedY();
         gameBoard.setSelectedCell(cell.first, cell.second);
+        renderer->startSelectionAnimation(oldX, oldY);
         renderer->startClickAnimation();
         gameBoard.algoClick();
         moveClock.restart();
@@ -79,7 +83,11 @@ private:
         if (cellsToFlag.empty()) {
             cout << "Flag queue emptied" << endl;
         }
+        // Trigger selection animation from current position to target
+        int oldX = gameBoard.getSelectedX();
+        int oldY = gameBoard.getSelectedY();
         gameBoard.setSelectedCell(cell.first, cell.second);
+        renderer->startSelectionAnimation(oldX, oldY);
         renderer->startClickAnimation();
         gameBoard.algoClick();
         moveClock.restart();
@@ -142,7 +150,7 @@ private:
             int flaggedCount = static_cast<int>(flaggedNeighbors.size());
             int unrevealedCount = static_cast<int>(unrevealedNeighbors.size());
 
-            // If unrevealed + flagged == cellValue and we have unflagged unrevealed cells, flag them all
+            // If unrevealed + flagged == cellValue and we have unflagged unrevealed cells, flag them one at a time
             if (unrevealedCount + flaggedCount == cellValue && unrevealedCount > 0) {
                 for (const auto& neighbor : unrevealedNeighbors) {
                     // Only queue if not already flagged
@@ -155,6 +163,7 @@ private:
                     }
                     if (!isFlagged) {
                         queueFlagCell(neighbor);
+                        return; // Only queue one cell at a time
                     }
                 }
             }
@@ -189,6 +198,7 @@ private:
                     }
                     if (!isFlagged) {
                         queueRevealCell(neighbor);
+                        return; // Only queue one cell at a time
                     }
                 }
             }
