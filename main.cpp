@@ -1,24 +1,15 @@
-#include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 
 int main()
 {
+    // Grid configuration
+    const int gridSize = 9;
+    const float cellSize = 50.0f;
+    const float gridWidth = gridSize * cellSize;
+    const float gridHeight = gridSize * cellSize;
+    
     // Create the main window
-    sf::RenderWindow window(sf::VideoMode({800, 600}), "SFML window");
-
-    // Load a sprite to display
-    const sf::Texture texture("cute_image.jpg");
-    sf::Sprite sprite(texture);
-
-    // Create a graphical text to display
-    const sf::Font font("GoogleSansCode-VariableFont_wght.ttf");
-    sf::Text text(font, "Hello SFML", 50);
-
-    // Load a music to play
-    // sf::Music music("nice_music.ogg");
-
-    // Play the music
-    // music.play();
+    sf::RenderWindow window(sf::VideoMode({static_cast<unsigned int>(gridWidth), static_cast<unsigned int>(gridHeight)}), "Minesweeper");
 
     // Start the game loop
     while (window.isOpen())
@@ -32,13 +23,21 @@ int main()
         }
 
         // Clear screen
-        window.clear();
+        window.clear(sf::Color::White);
 
-        // Draw the sprite
-        window.draw(sprite);
-
-        // Draw the string
-        window.draw(text);
+        // Draw the grid
+        for (int i = 0; i < gridSize; i++)
+        {
+            for (int j = 0; j < gridSize; j++)
+            {
+                sf::RectangleShape cell({cellSize - 2, cellSize - 2}); // -2 for spacing
+                cell.setPosition({i * cellSize + 1, j * cellSize + 1}); // +1 for spacing
+                cell.setFillColor(sf::Color(200, 200, 200));
+                cell.setOutlineThickness(1);
+                cell.setOutlineColor(sf::Color::Black);
+                window.draw(cell);
+            }
+        }
 
         // Update the window
         window.display();
