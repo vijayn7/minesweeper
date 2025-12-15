@@ -8,7 +8,7 @@
 #include "algoSolver.cpp"
 #include "heatmapSolver.cpp"
 
-enum SolverType { ALGO_SOLVER, HEATMAP_SOLVER };
+enum SolverType { ALGO_SOLVER, HEATMAP_SOLVER, MANUAL_PLAYER };
 
 int main() {    
     // Seed random number generator for different results each run
@@ -22,8 +22,8 @@ int main() {
     algoSolver algoSolverInstance(board, &renderer);
     heatmapSolver heatmapSolverInstance(board, &renderer);
     
-    // Current solver selection (default to algo solver)
-    SolverType currentSolver = ALGO_SOLVER;
+    // Current solver selection (default to manual player)
+    SolverType currentSolver = MANUAL_PLAYER;
     
     // Safe start mode (reveals a random zero cell at game start)
     bool safeStartEnabled = false;
@@ -133,30 +133,32 @@ int main() {
                     }
                 }
                 
-                // Solver selection: 1 for Algo, 2 for Heatmap
+                // Solver selection: 1 for Algo, 2 for Heatmap, 3 for Manual
                 if (keyEvent && keyEvent->code == sf::Keyboard::Key::Num1) {
-                    // Stop current solver
-                    if (currentSolver == ALGO_SOLVER) {
-                        algoSolverInstance.stop();
-                    } else {
-                        heatmapSolverInstance.stop();
-                    }
+                    // Stop all solvers
+                    algoSolverInstance.stop();
+                    heatmapSolverInstance.stop();
                     currentSolver = ALGO_SOLVER;
                     std::cout << "Switched to Algo Solver (press G to start)" << std::endl;
                 }
                 
                 if (keyEvent && keyEvent->code == sf::Keyboard::Key::Num2) {
-                    // Stop current solver
-                    if (currentSolver == ALGO_SOLVER) {
-                        algoSolverInstance.stop();
-                    } else {
-                        heatmapSolverInstance.stop();
-                    }
+                    // Stop all solvers
+                    algoSolverInstance.stop();
+                    heatmapSolverInstance.stop();
                     currentSolver = HEATMAP_SOLVER;
                     std::cout << "Switched to Heatmap Solver (press G to start)" << std::endl;
                 }
                 
-                // Start/Stop solver: G to toggle
+                if (keyEvent && keyEvent->code == sf::Keyboard::Key::Num3) {
+                    // Stop all solvers
+                    algoSolverInstance.stop();
+                    heatmapSolverInstance.stop();
+                    currentSolver = MANUAL_PLAYER;
+                    std::cout << "Switched to Manual Player mode" << std::endl;
+                }
+                
+                // Start/Stop solver: G to toggle (not applicable for manual mode)
                 if (keyEvent && keyEvent->code == sf::Keyboard::Key::G) {
                     if (currentSolver == ALGO_SOLVER) {
                         if (algoSolverInstance.isActive()) {
@@ -164,13 +166,14 @@ int main() {
                         } else {
                             algoSolverInstance.start();
                         }
-                    } else {
+                    } else if (currentSolver == HEATMAP_SOLVER) {
                         if (heatmapSolverInstance.isActive()) {
                             heatmapSolverInstance.stop();
                         } else {
                             heatmapSolverInstance.start();
                         }
                     }
+                    // Manual player mode doesn't use start/stop
                 }
             }
             
@@ -227,20 +230,25 @@ int main() {
             renderer.drawStatsAndControls(algoSolverInstance.getWins(), algoSolverInstance.getLosses(), 
                                          algoSolverInstance.getSpeed(), "Algo", algoSolverInstance.isActive(),
                                          &heatmapData, safeStartEnabled);
-        } else {
+        } else if (currentSolver == HEATMAP_SOLVER) {
             renderer.drawStatsAndControls(heatmapSolverInstance.getWins(), heatmapSolverInstance.getLosses(), 
                                          heatmapSolverInstance.getSpeed(), "Heatmap", heatmapSolverInstance.isActive(),
+                                         &heatmapData, safeStartEnabled);
+        } else {
+            // Manual player mode - no wins/losses tracked, speed N/A, never "active"
+            renderer.drawStatsAndControls(0, 0, 1.0f, "Manual", false,
                                          &heatmapData, safeStartEnabled);
         }
         
         renderer.finishFrame();
 
-        // Make move with current solver
+        // Make move with current solver (skip if manual player)
         if (currentSolver == ALGO_SOLVER) {
             algoSolverInstance.makeMove();
-        } else {
+        } else if (currentSolver == HEATMAP_SOLVER) {
             heatmapSolverInstance.makeMove();
         }
+        // Manual player mode: user controls all moves via mouse/keyboard
         
     }
 }
