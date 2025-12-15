@@ -439,7 +439,7 @@ void BoardRenderer::drawStatsAndControls(int wins, int losses, float speed, cons
     
     // Controls panel on the right side, below stats
     float controlsWidth = 200;
-    float controlsHeight = 190;
+    float controlsHeight = 215;
     float controlsX = boardWidth + 10; // 10px padding from board edge
     float controlsY = statsY + statsHeight + 15; // 15px below stats panel
     
