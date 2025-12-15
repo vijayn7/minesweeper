@@ -15,10 +15,15 @@ void BoardRenderer::render() {
     // Check if click animation should still be shown
     if (showClickAnimation && clickAnimationClock.getElapsedTime().asSeconds() > (baseClickAnimationDuration / animationSpeed)) {
         showClickAnimation = false;
+        isGuessMove = false; // Reset guess flag when animation completes
     }
     
     // Draw selection box with appropriate color
-    drawSelectionBox(showClickAnimation ? CLICK : SELECT);
+    SelectionType selectionType = SELECT;
+    if (showClickAnimation) {
+        selectionType = isGuessMove ? GUESS : CLICK;
+    }
+    drawSelectionBox(selectionType);
     
     // Draw inspection box if active
     if (isInspecting) {
@@ -291,6 +296,9 @@ void BoardRenderer::drawSelectionBox(SelectionType type) {
             break;
         case CLICK:
             boxColor = sf::Color(255, 0, 0, 50); // Subtle red highlight
+            break;
+        case GUESS:
+            boxColor = sf::Color(0, 255, 0, 80); // Green highlight for random guess
             break;
     }
     

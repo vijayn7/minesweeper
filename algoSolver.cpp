@@ -30,6 +30,7 @@ private:
     set<std::pair<int, int>> queuedForFlagging; // Track cells already queued for flagging
     bool algoActive = true; // Controls whether the algorithm should continue making moves
     bool inRandomGuessPhase = true; // Track if we're still in random guessing phase
+    bool nextRevealIsGuess = false; // Track if the next reveal is from a random guess
     
     // Statistics tracking
     int wins = 0;
@@ -80,6 +81,10 @@ private:
         int oldY = gameBoard.getSelectedY();
         gameBoard.setSelectedCell(cell.first, cell.second);
         renderer->startSelectionAnimation(oldX, oldY);
+        if (renderer && nextRevealIsGuess) {
+            renderer->setGuessMove(true);
+            nextRevealIsGuess = false; // Reset flag after using it
+        }
         renderer->startClickAnimation();
         gameBoard.algoClick();
         moveClock.restart();
@@ -122,6 +127,7 @@ private:
         vector<pair<int, int>> unrevealedCells = gameBoard.getAllUnrevealedCells();
         if (unrevealedCells.empty()) return; // No moves available
         pair<int, int> move = solverUtilities::makeRandomMove(unrevealedCells);
+        nextRevealIsGuess = true; // Mark that the next reveal is a guess
         queueRevealCell(move);
     }
 
@@ -243,6 +249,7 @@ private:
         algoActive = true;
         inRandomGuessPhase = true;
         gameWasCounted = false; // Reset for next game
+        nextRevealIsGuess = false; // Reset guess flag
     }
 
     // Cell - flagged neighbors == 1 && unrev neighbors - flagged neighbors == 1

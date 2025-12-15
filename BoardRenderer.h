@@ -6,7 +6,7 @@
 
 class BoardRenderer {
 public:
-    enum SelectionType { SELECT, SEARCH, CLICK };
+    enum SelectionType { SELECT, SEARCH, CLICK, GUESS };
     
 private:
     static constexpr float CELL_SIZE = 50.0f;
@@ -17,6 +17,7 @@ private:
     float baseClickAnimationDuration = 0.3f;
     bool debugOverlayEnabled = false;
     float animationSpeed = 1.0f; // Speed multiplier for all animations
+    bool isGuessMove = false; // Track if current move is a random guess
     
     // Selection animation
     bool isAnimatingSelection = false;
@@ -50,6 +51,7 @@ public:
     void startSelectionAnimation(int oldX, int oldY);
     void startInspection(int x, int y);
     void stopInspection();
+    void setGuessMove(bool isGuess) { isGuessMove = isGuess; }
     
     // Debug features
     void setDebugOverlay(bool enabled) { debugOverlayEnabled = enabled; }
