@@ -480,9 +480,7 @@ public:
     
     // Get current heatmap for visualization
     map<pair<int, int>, float> getHeatmapData() const {
-        if (inRandomGuessPhase) {
-            return map<pair<int, int>, float>(); // Return empty map during random phase
-        }
+        // Always return heatmap data, even during random guess phase
         return const_cast<heatmapSolver*>(this)->calculateHeatmap();
     }
     

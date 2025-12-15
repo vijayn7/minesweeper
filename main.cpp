@@ -206,13 +206,15 @@ int main() {
         // Render
         renderer.render();
         
+        // Always get heatmap data for visualization (looks cool!)
+        auto heatmapData = heatmapSolverInstance.getHeatmapData();
+        
         // Display stats for current solver
         if (currentSolver == ALGO_SOLVER) {
             renderer.drawStatsAndControls(algoSolverInstance.getWins(), algoSolverInstance.getLosses(), 
-                                         algoSolverInstance.getSpeed(), "Algo", algoSolverInstance.isActive());
+                                         algoSolverInstance.getSpeed(), "Algo", algoSolverInstance.isActive(),
+                                         &heatmapData);
         } else {
-            // Pass heatmap data for visualization
-            auto heatmapData = heatmapSolverInstance.getHeatmapData();
             renderer.drawStatsAndControls(heatmapSolverInstance.getWins(), heatmapSolverInstance.getLosses(), 
                                          heatmapSolverInstance.getSpeed(), "Heatmap", heatmapSolverInstance.isActive(),
                                          &heatmapData);
