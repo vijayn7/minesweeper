@@ -192,6 +192,28 @@ void Board::reset() {
     currentGameState = PLAYING;
 }
 
+void Board::revealRandomZero() {
+    // Find all zero cells
+    vector<pair<int, int>> zeroCells;
+    for (int x = 0; x < GRID_SIZE; x++) {
+        for (int y = 0; y < GRID_SIZE; y++) {
+            if (gridData[x][y] == ZERO) {
+                zeroCells.push_back({x, y});
+            }
+        }
+    }
+    
+    // If there are zero cells, reveal a random one
+    if (!zeroCells.empty()) {
+        int randomIndex = solverUtilities::getRandomInt(0, zeroCells.size() - 1);
+        auto [x, y] = zeroCells[randomIndex];
+        cout << "Safe start: revealing zero cell at (" << x << ", " << y << ")" << endl;
+        revealCell(x, y);
+    } else {
+        cout << "No zero cells available for safe start!" << endl;
+    }
+}
+
 vector<vector<int>> Board::getPlayerView() const {
     vector<vector<int>> playerView(GRID_SIZE, vector<int>(GRID_SIZE, -1)); // -1 for unrevealed
 

@@ -43,6 +43,9 @@ private:
     // Stuck detection
     int consecutiveEmptyQueues = 0;
     const int MAX_EMPTY_QUEUE_ATTEMPTS = 5;
+    
+    // Safe start mode
+    bool safeStartEnabled = false;
 
     void queueRevealCell(pair<int, int> cell) {
         // Don't queue if already revealed
@@ -452,9 +455,15 @@ private:
         queuedForFlagging.clear();
         if (renderer) renderer->stopInspection();
         gameBoard.reset();
+        if (safeStartEnabled) {
+            gameBoard.revealRandomZero();
+            inRandomGuessPhase = false; // Skip random guess phase
+        }
         firstMove = true;
         algoActive = wasActive; // Maintain start/stop state after reset
-        inRandomGuessPhase = true;
+        if (!safeStartEnabled) {
+            inRandomGuessPhase = true;
+        }
         gameWasCounted = false;
         nextRevealIsGuess = false;
         consecutiveEmptyQueues = 0; // Reset stuck detection
@@ -477,6 +486,10 @@ public:
     int getWins() const { return wins; }
     int getLosses() const { return losses; }
     int getTotalGames() const { return wins + losses; }
+    
+    void setSafeStart(bool enabled) {
+        safeStartEnabled = enabled;
+    }
     
     // Get current heatmap for visualization
     map<pair<int, int>, float> getHeatmapData() const {

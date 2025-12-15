@@ -52,7 +52,8 @@ public:
     void drawGameOverScreen();
     void drawSelectionBox(SelectionType type);
     void drawStatsAndControls(int wins, int losses, float speed, const std::string& solverName, bool solverActive, 
-                             const std::map<std::pair<int, int>, float>* heatmapData = nullptr);
+                             const std::map<std::pair<int, int>, float>* heatmapData = nullptr,
+                             bool safeStart = false);
     bool isStartStopButtonClicked(float mouseX, float mouseY) const;
     
     // Animation control

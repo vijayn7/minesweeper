@@ -36,6 +36,9 @@ private:
     int wins = 0;
     int losses = 0;
     bool gameWasCounted = false; // Prevent counting the same game multiple times
+    
+    // Safe start mode
+    bool safeStartEnabled = false;
 
     void queueRevealCell(pair<int, int> cell) {
         // Don't queue if already revealed
@@ -260,9 +263,15 @@ private:
         queuedForFlagging.clear();
         if (renderer) renderer->stopInspection();
         gameBoard.reset();
+        if (safeStartEnabled) {
+            gameBoard.revealRandomZero();
+            inRandomGuessPhase = false; // Skip random guess phase
+        }
         firstMove = true;
         algoActive = wasActive; // Maintain start/stop state after reset
-        inRandomGuessPhase = true;
+        if (!safeStartEnabled) {
+            inRandomGuessPhase = true;
+        }
         gameWasCounted = false; // Reset for next game
         nextRevealIsGuess = false; // Reset guess flag
     }
@@ -346,6 +355,10 @@ public:
     int getWins() const { return wins; }
     int getLosses() const { return losses; }
     int getTotalGames() const { return wins + losses; }
+    
+    void setSafeStart(bool enabled) {
+        safeStartEnabled = enabled;
+    }
     
     void start() {
         algoActive = true;

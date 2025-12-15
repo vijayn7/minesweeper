@@ -351,7 +351,7 @@ void BoardRenderer::startSelectionAnimation(int oldX, int oldY) {
 }
 
 void BoardRenderer::drawStatsAndControls(int wins, int losses, float speed, const std::string& solverName, bool solverActive,
-                                         const std::map<std::pair<int, int>, float>* heatmapData) {
+                                         const std::map<std::pair<int, int>, float>* heatmapData, bool safeStart) {
     float boardWidth = board->getGridSize() * CELL_SIZE;
     float boardHeight = board->getGridSize() * CELL_SIZE;
     int totalGames = wins + losses;
@@ -460,6 +460,7 @@ void BoardRenderer::drawStatsAndControls(int wins, int losses, float speed, cons
     controlsStr += "G - Start/Stop\n";
     controlsStr += "\nGame Controls:\n";
     controlsStr += "R - Reset\n";
+    controlsStr += "X - Safe Start: " + std::string(safeStart ? "ON" : "OFF") + "\n";
     controlsStr += "Space - Mode\n";
     controlsStr += "+/- - Speed\n";
     controlsStr += "F - Debug\n";  // Added newline for bottom padding

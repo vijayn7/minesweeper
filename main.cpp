@@ -25,6 +25,9 @@ int main() {
     // Current solver selection (default to algo solver)
     SolverType currentSolver = ALGO_SOLVER;
     
+    // Safe start mode (reveals a random zero cell at game start)
+    bool safeStartEnabled = false;
+    
     // Stop both solvers by default
     algoSolverInstance.stop();
     heatmapSolverInstance.stop();
@@ -91,6 +94,16 @@ int main() {
 
                 if (keyEvent && keyEvent->code == sf::Keyboard::Key::R) {
                     board.reset();
+                    if (safeStartEnabled) {
+                        board.revealRandomZero();
+                    }
+                }
+                
+                if (keyEvent && keyEvent->code == sf::Keyboard::Key::X) {
+                    safeStartEnabled = !safeStartEnabled;
+                    algoSolverInstance.setSafeStart(safeStartEnabled);
+                    heatmapSolverInstance.setSafeStart(safeStartEnabled);
+                    std::cout << "Safe start " << (safeStartEnabled ? "enabled" : "disabled") << std::endl;
                 }
                 
                 if (keyEvent && keyEvent->code == sf::Keyboard::Key::F) {
@@ -213,11 +226,11 @@ int main() {
         if (currentSolver == ALGO_SOLVER) {
             renderer.drawStatsAndControls(algoSolverInstance.getWins(), algoSolverInstance.getLosses(), 
                                          algoSolverInstance.getSpeed(), "Algo", algoSolverInstance.isActive(),
-                                         &heatmapData);
+                                         &heatmapData, safeStartEnabled);
         } else {
             renderer.drawStatsAndControls(heatmapSolverInstance.getWins(), heatmapSolverInstance.getLosses(), 
                                          heatmapSolverInstance.getSpeed(), "Heatmap", heatmapSolverInstance.isActive(),
-                                         &heatmapData);
+                                         &heatmapData, safeStartEnabled);
         }
         
         renderer.finishFrame();

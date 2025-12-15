@@ -50,6 +50,7 @@ public:
     void handleClick(int x, int y);
     bool algoClick() override;
     void reset() override;
+    void revealRandomZero() override;
     
     // Utility
     std::vector<std::vector<int>> getPlayerView() const override;
