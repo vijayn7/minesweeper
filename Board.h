@@ -34,7 +34,7 @@ public:
     
     // Game state
     GameState getGameState() const override { return currentGameState; }
-    ClickMode getClickMode() const { return currentClickMode; }
+    ClickMode getClickMode() const override { return currentClickMode; }
     void toggleClickMode();
     bool isGameOver() const override;
     void setClickMode(ClickMode mode) override;

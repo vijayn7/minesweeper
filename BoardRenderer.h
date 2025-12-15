@@ -2,6 +2,7 @@
 #define BOARDRENDERER_H
 
 #include <SFML/Graphics.hpp>
+#include <map>
 #include "Board.h"
 
 class BoardRenderer {
@@ -32,6 +33,12 @@ private:
     int inspectY = -1;
     sf::Clock inspectionAnimationClock;
     
+    // Start/Stop button bounds
+    float buttonX = 0;
+    float buttonY = 0;
+    float buttonWidth = 0;
+    float buttonHeight = 0;
+    
 public:
     BoardRenderer(Board& board, sf::RenderWindow& window);
     
@@ -44,7 +51,9 @@ public:
     void drawModeIndicator();
     void drawGameOverScreen();
     void drawSelectionBox(SelectionType type);
-    void drawStatsAndControls(int wins, int losses, float speed);
+    void drawStatsAndControls(int wins, int losses, float speed, const std::string& solverName, bool solverActive, 
+                             const std::map<std::pair<int, int>, float>* heatmapData = nullptr);
+    bool isStartStopButtonClicked(float mouseX, float mouseY) const;
     
     // Animation control
     void startClickAnimation();
@@ -70,6 +79,7 @@ private:
     void drawNumber(int x, int y, int value);
     void drawDebugOverlay(int x, int y);
     void drawInspectionBox();
+    void drawHeatmap(float x, float y, float size, const std::map<std::pair<int, int>, float>& heatmapData);
 };
 
 #endif

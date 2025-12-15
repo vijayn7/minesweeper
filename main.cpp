@@ -6,17 +6,28 @@
 #include <cstdlib>
 #include <ctime>
 #include "algoSolver.cpp"
+#include "heatmapSolver.cpp"
+
+enum SolverType { ALGO_SOLVER, HEATMAP_SOLVER };
 
 int main() {    
     // Seed random number generator for different results each run
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
     
-    // Create the main window with initial size (board + mode indicator + side panel)
-    sf::RenderWindow window(sf::VideoMode({670, 480}), "Minesweeper");
+    // Create the main window with initial size (board + mode indicator + side panel + heatmap)
+    sf::RenderWindow window(sf::VideoMode({670, 830}), "Minesweeper");
     
     Board board;
     BoardRenderer renderer(board, window);
-    algoSolver solver(board, &renderer);
+    algoSolver algoSolverInstance(board, &renderer);
+    heatmapSolver heatmapSolverInstance(board, &renderer);
+    
+    // Current solver selection (default to algo solver)
+    SolverType currentSolver = ALGO_SOLVER;
+    
+    // Stop both solvers by default
+    algoSolverInstance.stop();
+    heatmapSolverInstance.stop();
 
     // Game loop
     while (window.isOpen()) {
@@ -88,13 +99,64 @@ int main() {
                 
                 // Speed controls: + or = to increase, - to decrease
                 if (keyEvent && (keyEvent->code == sf::Keyboard::Key::Equal || keyEvent->code == sf::Keyboard::Key::Hyphen)) {
-                    float currentSpeed = solver.getSpeed();
-                    if (keyEvent->code == sf::Keyboard::Key::Equal) {
-                        solver.setSpeed(currentSpeed + 0.5f);
-                        std::cout << "Speed increased to " << solver.getSpeed() << "x" << std::endl;
+                    if (currentSolver == ALGO_SOLVER) {
+                        float currentSpeed = algoSolverInstance.getSpeed();
+                        if (keyEvent->code == sf::Keyboard::Key::Equal) {
+                            algoSolverInstance.setSpeed(currentSpeed + 0.5f);
+                            std::cout << "Speed increased to " << algoSolverInstance.getSpeed() << "x" << std::endl;
+                        } else {
+                            algoSolverInstance.setSpeed(currentSpeed - 0.5f);
+                            std::cout << "Speed decreased to " << algoSolverInstance.getSpeed() << "x" << std::endl;
+                        }
                     } else {
-                        solver.setSpeed(currentSpeed - 0.5f);
-                        std::cout << "Speed decreased to " << solver.getSpeed() << "x" << std::endl;
+                        float currentSpeed = heatmapSolverInstance.getSpeed();
+                        if (keyEvent->code == sf::Keyboard::Key::Equal) {
+                            heatmapSolverInstance.setSpeed(currentSpeed + 0.5f);
+                            std::cout << "Speed increased to " << heatmapSolverInstance.getSpeed() << "x" << std::endl;
+                        } else {
+                            heatmapSolverInstance.setSpeed(currentSpeed - 0.5f);
+                            std::cout << "Speed decreased to " << heatmapSolverInstance.getSpeed() << "x" << std::endl;
+                        }
+                    }
+                }
+                
+                // Solver selection: 1 for Algo, 2 for Heatmap
+                if (keyEvent && keyEvent->code == sf::Keyboard::Key::Num1) {
+                    // Stop current solver
+                    if (currentSolver == ALGO_SOLVER) {
+                        algoSolverInstance.stop();
+                    } else {
+                        heatmapSolverInstance.stop();
+                    }
+                    currentSolver = ALGO_SOLVER;
+                    std::cout << "Switched to Algo Solver (press G to start)" << std::endl;
+                }
+                
+                if (keyEvent && keyEvent->code == sf::Keyboard::Key::Num2) {
+                    // Stop current solver
+                    if (currentSolver == ALGO_SOLVER) {
+                        algoSolverInstance.stop();
+                    } else {
+                        heatmapSolverInstance.stop();
+                    }
+                    currentSolver = HEATMAP_SOLVER;
+                    std::cout << "Switched to Heatmap Solver (press G to start)" << std::endl;
+                }
+                
+                // Start/Stop solver: G to toggle
+                if (keyEvent && keyEvent->code == sf::Keyboard::Key::G) {
+                    if (currentSolver == ALGO_SOLVER) {
+                        if (algoSolverInstance.isActive()) {
+                            algoSolverInstance.stop();
+                        } else {
+                            algoSolverInstance.start();
+                        }
+                    } else {
+                        if (heatmapSolverInstance.isActive()) {
+                            heatmapSolverInstance.stop();
+                        } else {
+                            heatmapSolverInstance.start();
+                        }
                     }
                 }
             }
@@ -110,21 +172,60 @@ int main() {
             if (event->is<sf::Event::MouseButtonPressed>()) {
                 const auto& mouseEvent = event->getIf<sf::Event::MouseButtonPressed>();
                 if (mouseEvent) {
-                    int x = mouseEvent->position.x / static_cast<int>(renderer.getCellSize());
-                    int y = mouseEvent->position.y / static_cast<int>(renderer.getCellSize());
-                    
-                    board.handleClick(x, y);
-                    renderer.startClickAnimation();
+                    // Check if click is on Start/Stop button
+                    if (renderer.isStartStopButtonClicked(mouseEvent->position.x, mouseEvent->position.y)) {
+                        // Toggle current solver
+                        if (currentSolver == ALGO_SOLVER) {
+                            if (algoSolverInstance.isActive()) {
+                                algoSolverInstance.stop();
+                            } else {
+                                algoSolverInstance.start();
+                            }
+                        } else {
+                            if (heatmapSolverInstance.isActive()) {
+                                heatmapSolverInstance.stop();
+                            } else {
+                                heatmapSolverInstance.start();
+                            }
+                        }
+                    } else {
+                        // Regular board click - check bounds
+                        int x = mouseEvent->position.x / static_cast<int>(renderer.getCellSize());
+                        int y = mouseEvent->position.y / static_cast<int>(renderer.getCellSize());
+                        
+                        // Only handle click if within board boundaries
+                        if (x >= 0 && x < board.getGridSize() && y >= 0 && y < board.getGridSize()) {
+                            board.handleClick(x, y);
+                            renderer.startClickAnimation();
+                        }
+                    }
                 }
             }
         }
 
         // Render
         renderer.render();
-        renderer.drawStatsAndControls(solver.getWins(), solver.getLosses(), solver.getSpeed());
+        
+        // Display stats for current solver
+        if (currentSolver == ALGO_SOLVER) {
+            renderer.drawStatsAndControls(algoSolverInstance.getWins(), algoSolverInstance.getLosses(), 
+                                         algoSolverInstance.getSpeed(), "Algo", algoSolverInstance.isActive());
+        } else {
+            // Pass heatmap data for visualization
+            auto heatmapData = heatmapSolverInstance.getHeatmapData();
+            renderer.drawStatsAndControls(heatmapSolverInstance.getWins(), heatmapSolverInstance.getLosses(), 
+                                         heatmapSolverInstance.getSpeed(), "Heatmap", heatmapSolverInstance.isActive(),
+                                         &heatmapData);
+        }
+        
         renderer.finishFrame();
 
-        solver.makeMove();
+        // Make move with current solver
+        if (currentSolver == ALGO_SOLVER) {
+            algoSolverInstance.makeMove();
+        } else {
+            heatmapSolverInstance.makeMove();
+        }
         
     }
 }

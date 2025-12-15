@@ -30,6 +30,7 @@ enum CellVal { ZERO = 0, ONE = 1, TWO = 2, THREE = 3, FOUR = 4, FIVE = 5, SIX = 
     // Actions
     virtual bool algoClick() = 0;
     virtual void setClickMode(ClickMode mode) = 0;
+    virtual ClickMode getClickMode() const = 0;
     
     // Utility
     virtual std::vector<std::pair<int, int>> getAllUnrevealedCells() const = 0;

@@ -350,14 +350,15 @@ void BoardRenderer::startSelectionAnimation(int oldX, int oldY) {
     selectionAnimationClock.restart();
 }
 
-void BoardRenderer::drawStatsAndControls(int wins, int losses, float speed) {
+void BoardRenderer::drawStatsAndControls(int wins, int losses, float speed, const std::string& solverName, bool solverActive,
+                                         const std::map<std::pair<int, int>, float>* heatmapData) {
     float boardWidth = board->getGridSize() * CELL_SIZE;
     float boardHeight = board->getGridSize() * CELL_SIZE;
     int totalGames = wins + losses;
     
     // Stats panel on the right side, outside the board
     float statsWidth = 200;
-    float statsHeight = 120;
+    float statsHeight = 190;
     float statsX = boardWidth + 10; // 10px padding from board edge
     float statsY = 10;
     
@@ -376,15 +377,24 @@ void BoardRenderer::drawStatsAndControls(int wins, int losses, float speed) {
     statsText.setCharacterSize(16);
     statsText.setFillColor(sf::Color(30, 30, 30));
     
-    std::string statsStr = "Wins: " + std::to_string(wins) + "\n";
+    std::string statsStr = "Solver: " + solverName + "\n";
+    statsStr += "Wins: " + std::to_string(wins) + "\n";
     statsStr += "Losses: " + std::to_string(losses) + "\n";
-    statsStr += "Total: " + std::to_string(totalGames) + "\n";
+    
+    // Show dash if no games played yet, otherwise show total
+    if (totalGames == 0) {
+        statsStr += "Total: -\n";
+    } else {
+        statsStr += "Total: " + std::to_string(totalGames) + "\n";
+    }
     
     if (totalGames > 0) {
         float winRate = (static_cast<float>(wins) / totalGames) * 100.0f;
         char buffer[32];
         snprintf(buffer, sizeof(buffer), "Win Rate: %.1f%%", winRate);
         statsStr += std::string(buffer) + "\n";
+    } else {
+        statsStr += "Win Rate: -\n";
     }
     
     char speedBuffer[32];
@@ -395,11 +405,43 @@ void BoardRenderer::drawStatsAndControls(int wins, int losses, float speed) {
     statsText.setPosition({statsX + 10, statsY + 10});
     window->draw(statsText);
     
+    // Draw Start/Stop button (with extra padding above)
+    buttonWidth = 180;
+    buttonHeight = 35;
+    buttonX = statsX + 10;
+    buttonY = statsY + statsHeight - buttonHeight - 15; // 15px padding above button
+    
+    sf::RectangleShape button({buttonWidth, buttonHeight});
+    button.setPosition({buttonX, buttonY});
+    
+    // Button color based on state
+    if (solverActive) {
+        button.setFillColor(sf::Color(220, 80, 80)); // Red for Stop
+    } else {
+        button.setFillColor(sf::Color(80, 180, 80)); // Green for Start
+    }
+    button.setOutlineThickness(2);
+    button.setOutlineColor(sf::Color(50, 50, 50));
+    window->draw(button);
+    
+    // Button text
+    sf::Text buttonText(font);
+    buttonText.setCharacterSize(16);
+    buttonText.setFillColor(sf::Color::White);
+    buttonText.setStyle(sf::Text::Bold);
+    buttonText.setString(solverActive ? "STOP" : "START");
+    
+    sf::FloatRect buttonTextBounds = buttonText.getLocalBounds();
+    buttonText.setOrigin({buttonTextBounds.size.x / 2 + buttonTextBounds.position.x, 
+                          buttonTextBounds.size.y / 2 + buttonTextBounds.position.y});
+    buttonText.setPosition({buttonX + buttonWidth / 2, buttonY + buttonHeight / 2});
+    window->draw(buttonText);
+    
     // Controls panel on the right side, below stats
     float controlsWidth = 200;
-    float controlsHeight = 130;
+    float controlsHeight = 190;
     float controlsX = boardWidth + 10; // 10px padding from board edge
-    float controlsY = statsY + statsHeight + 10; // 10px below stats panel
+    float controlsY = statsY + statsHeight + 15; // 15px below stats panel
     
     sf::RectangleShape controlsBg({controlsWidth, controlsHeight});
     controlsBg.setPosition({controlsX, controlsY});
@@ -409,11 +451,33 @@ void BoardRenderer::drawStatsAndControls(int wins, int losses, float speed) {
     window->draw(controlsBg);
     
     sf::Text controlsText(font);
-    controlsText.setCharacterSize(14);
+    controlsText.setCharacterSize(12);
     controlsText.setFillColor(sf::Color(30, 30, 30));
-    controlsText.setString("Controls:\nR - Reset\nSpace - Toggle Mode\n+ - Speed Up\n- - Slow Down\nF - Debug (hold)");
+    std::string controlsStr = "Controls:\n";
+    controlsStr += "\nSolver Controls:\n";
+    controlsStr += "1 - Algo Solver\n";
+    controlsStr += "2 - Heatmap Solver\n";
+    controlsStr += "G - Start/Stop\n";
+    controlsStr += "\nGame Controls:\n";
+    controlsStr += "R - Reset\n";
+    controlsStr += "Space - Mode\n";
+    controlsStr += "+/- - Speed\n";
+    controlsStr += "F - Debug\n";  // Added newline for bottom padding
+    controlsText.setString(controlsStr);
     controlsText.setPosition({controlsX + 10, controlsY + 10});
     window->draw(controlsText);
+    
+    // Add padding rectangle at bottom of controls panel
+    sf::RectangleShape bottomPadding({controlsWidth, 10});
+    bottomPadding.setPosition({controlsX, controlsY + controlsHeight});
+    bottomPadding.setFillColor(sf::Color::Transparent);
+    window->draw(bottomPadding);
+    
+    // Draw heatmap visualization if data is provided
+    if (heatmapData != nullptr && !heatmapData->empty()) {
+        float heatmapY = controlsY + controlsHeight + 20;
+        drawHeatmap(controlsX, heatmapY, 200, *heatmapData);
+    }
 }
 
 void BoardRenderer::startInspection(int x, int y) {
@@ -481,4 +545,74 @@ void BoardRenderer::drawDebugOverlay(int x, int y) {
     debugText.setPosition({x * CELL_SIZE + CELL_SIZE / 2, 
                            y * CELL_SIZE + CELL_SIZE / 2});
     window->draw(debugText);
+}
+
+void BoardRenderer::drawHeatmap(float x, float y, float size, const std::map<std::pair<int, int>, float>& heatmapData) {
+    int gridSize = board->getGridSize();
+    float miniCellSize = size / gridSize;
+    
+    // Draw background panel
+    sf::RectangleShape heatmapBg({size, size});
+    heatmapBg.setPosition({x, y});
+    heatmapBg.setFillColor(sf::Color(240, 240, 240, 230));
+    heatmapBg.setOutlineThickness(2);
+    heatmapBg.setOutlineColor(sf::Color(100, 100, 100));
+    window->draw(heatmapBg);
+    
+    // Find max probability for normalization
+    float maxProb = 0.0f;
+    for (const auto& entry : heatmapData) {
+        if (entry.second > maxProb) {
+            maxProb = entry.second;
+        }
+    }
+    
+    // Draw each cell
+    for (int i = 0; i < gridSize; i++) {
+        for (int j = 0; j < gridSize; j++) {
+            float cellX = x + i * miniCellSize;
+            float cellY = y + j * miniCellSize;
+            
+            sf::RectangleShape miniCell({miniCellSize - 1, miniCellSize - 1});
+            miniCell.setPosition({cellX, cellY});
+            
+            // Check if cell is revealed
+            if (board->isRevealed(i, j)) {
+                miniCell.setFillColor(sf::Color(192, 192, 192)); // Gray for revealed
+            } else if (board->isFlagged(i, j)) {
+                miniCell.setFillColor(sf::Color(255, 100, 100)); // Red for flagged
+            } else {
+                // Color based on probability
+                auto it = heatmapData.find({i, j});
+                if (it != heatmapData.end() && maxProb > 0) {
+                    float prob = it->second / maxProb; // Normalize to 0-1
+                    // Green (safe) to Yellow to Red (dangerous)
+                    int red = static_cast<int>(255 * prob);
+                    int green = static_cast<int>(255 * (1.0f - prob * 0.5f));
+                    int blue = static_cast<int>(50 * (1.0f - prob));
+                    miniCell.setFillColor(sf::Color(red, green, blue));
+                } else {
+                    miniCell.setFillColor(sf::Color(100, 100, 100)); // Dark gray for no info
+                }
+            }
+            
+            miniCell.setOutlineThickness(-0.5f);
+            miniCell.setOutlineColor(sf::Color(80, 80, 80));
+            window->draw(miniCell);
+        }
+    }
+    
+    // Draw title
+    static sf::Font font("font.ttf");
+    sf::Text titleText(font);
+    titleText.setCharacterSize(12);
+    titleText.setFillColor(sf::Color(30, 30, 30));
+    titleText.setString("Probability Heatmap");
+    titleText.setPosition({x + 5, y - 18});
+    window->draw(titleText);
+}
+
+bool BoardRenderer::isStartStopButtonClicked(float mouseX, float mouseY) const {
+    return mouseX >= buttonX && mouseX <= buttonX + buttonWidth &&
+           mouseY >= buttonY && mouseY <= buttonY + buttonHeight;
 }

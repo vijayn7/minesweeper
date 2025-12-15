@@ -28,7 +28,7 @@ private:
     queue<std::pair<int, int>> cellsToReveal;
     queue<std::pair<int, int>> cellsToFlag;
     set<std::pair<int, int>> queuedForFlagging; // Track cells already queued for flagging
-    bool algoActive = true; // Controls whether the algorithm should continue making moves
+    bool algoActive = false; // Controls whether the algorithm should continue making moves (default: stopped)
     bool inRandomGuessPhase = true; // Track if we're still in random guessing phase
     bool nextRevealIsGuess = false; // Track if the next reveal is from a random guess
     
@@ -169,6 +169,11 @@ private:
             int flaggedCount = static_cast<int>(flaggedNeighbors.size());
             int unrevealedCount = static_cast<int>(unrevealedNeighbors.size());
 
+            // Skip if we already have too many flags (shouldn't happen but safety check)
+            if (flaggedCount >= cellValue) {
+                continue;
+            }
+
             // If unrevealed + flagged == cellValue and we have unflagged unrevealed cells, flag them one at a time
             if (unrevealedCount + flaggedCount == cellValue && unrevealedCount > 0) {
                 for (const auto& neighbor : unrevealedNeighbors) {
@@ -205,6 +210,13 @@ private:
             int cellValue = gameBoard.getCellVal(x, y);
             int flaggedCount = numFlaggedNeighbors(x, y);
 
+            // Skip if we have too many flags (impossible state, likely error in flagging)
+            if (flaggedCount > cellValue) {
+                cout << "[Algo] Warning: Cell (" << x << ", " << y << ") has " << flaggedCount 
+                     << " flags but value is " << cellValue << ". Skipping." << endl;
+                continue;
+            }
+
             if (flaggedCount == cellValue) {
                 vector<pair<int, int>> unrevealedNeighbors = gameBoard.getUnrevealedNeighbors(x, y);
                 vector<pair<int, int>> flaggedNeighbors = gameBoard.getFlaggedNeighbors(x, y);
@@ -240,13 +252,16 @@ private:
             gameWasCounted = true;
         }
         
+        // Preserve the active state so solver continues running after reset
+        bool wasActive = algoActive;
+        
         while (!cellsToReveal.empty()) cellsToReveal.pop();
         while (!cellsToFlag.empty()) cellsToFlag.pop();
         queuedForFlagging.clear();
         if (renderer) renderer->stopInspection();
         gameBoard.reset();
         firstMove = true;
-        algoActive = true;
+        algoActive = wasActive; // Maintain start/stop state after reset
         inRandomGuessPhase = true;
         gameWasCounted = false; // Reset for next game
         nextRevealIsGuess = false; // Reset guess flag
@@ -269,6 +284,11 @@ private:
             vector<pair<int, int>> flaggedNeighbors = gameBoard.getFlaggedNeighbors(x, y);
             int flaggedCount = static_cast<int>(flaggedNeighbors.size());
             int unrevCount = static_cast<int>(unrevealedNeighbors.size());
+
+            // Skip if we already have too many flags
+            if (flaggedCount >= cellValue) {
+                continue;
+            }
 
             if (flaggedCount == cellValue - 1 && unrevCount - flaggedCount == 1) {
                 for (const auto& neighbor : unrevealedNeighbors) {
@@ -326,6 +346,21 @@ public:
     int getWins() const { return wins; }
     int getLosses() const { return losses; }
     int getTotalGames() const { return wins + losses; }
+    
+    void start() {
+        algoActive = true;
+        cout << "[Algo] Solver started" << endl;
+    }
+    
+    void stop() {
+        algoActive = false;
+        if (renderer) renderer->stopInspection();
+        cout << "[Algo] Solver stopped" << endl;
+    }
+    
+    bool isActive() const {
+        return algoActive;
+    }
 
     void makeMove() {
         // Only make a move if enough time has passed

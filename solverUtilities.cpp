@@ -1,3 +1,6 @@
+#ifndef SOLVER_UTILITIES_H
+#define SOLVER_UTILITIES_H
+
 class solverUtilities {
 public:
 
@@ -11,3 +14,5 @@ public:
     }
 
 };
+
+#endif
